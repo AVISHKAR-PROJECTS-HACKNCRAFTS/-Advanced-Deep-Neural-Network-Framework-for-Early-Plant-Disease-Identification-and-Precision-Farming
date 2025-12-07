@@ -1,0 +1,487 @@
+<html>
+{% extends 'base.html' %}
+{% block pagetitle %}
+AI Engine
+{% endblock pagetitle %}
+
+{% block body %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 40px 0;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        margin-bottom: 10px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 400;
+    }
+
+    .main-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    .upload-section {
+        background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+    }
+
+    .upload-area {
+        border: 3px dashed #4ECC5A;
+        border-radius: 16px;
+        padding: 40px 20px;
+        background: rgba(78, 204, 90, 0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 25px;
+    }
+
+    .upload-area:hover {
+        background: rgba(78, 204, 90, 0.15);
+        border-color: #2d8f4e;
+        transform: scale(1.02);
+    }
+
+    .upload-area.dragover {
+        background: rgba(78, 204, 90, 0.25);
+        border-color: #2d8f4e;
+    }
+
+    .upload-icon {
+        font-size: 48px;
+        color: #4ECC5A;
+        margin-bottom: 15px;
+    }
+
+    .upload-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #1a5c2e;
+        margin-bottom: 8px;
+    }
+
+    .upload-subtitle {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .upload-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-upload {
+        background: linear-gradient(135deg, #4ECC5A, #2d8f4e);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-upload:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(78, 204, 90, 0.4);
+    }
+
+    .btn-camera {
+        background: transparent;
+        color: #4ECC5A;
+        border: 2px solid #4ECC5A;
+        padding: 12px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-camera:hover {
+        background: #4ECC5A;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    .file-name {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: rgba(78, 204, 90, 0.1);
+        border-radius: 30px;
+        color: #1a5c2e;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .preview-container {
+        margin-top: 20px;
+        display: none;
+    }
+
+    .preview-container img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        object-fit: cover;
+    }
+
+    .camera-container {
+        display: none;
+        margin-top: 20px;
+        background: #000;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .camera-container video {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 16px;
+    }
+
+    .btn-capture {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff4757;
+        color: #fff;
+        border: none;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 5px 20px rgba(255, 71, 87, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .btn-capture:hover {
+        transform: translateX(-50%) scale(1.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #4ECC5A, #1a5c2e);
+        color: #fff;
+        border: none;
+        padding: 15px 50px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 25px;
+        box-shadow: 0 15px 40px rgba(78, 204, 90, 0.4);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 50px rgba(78, 204, 90, 0.5);
+    }
+
+    .info-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        height: 100%;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .info-card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #4ECC5A, #2d8f4e);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .info-card-icon i {
+        font-size: 28px;
+        color: #fff;
+    }
+
+    .info-card h5 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a5c2e;
+        margin-bottom: 15px;
+    }
+
+    .info-card p, .info-card li {
+        color: #555;
+        line-height: 1.7;
+        font-size: 0.95rem;
+    }
+
+    .info-card ol {
+        padding-left: 20px;
+    }
+
+    .info-card ol li {
+        margin-bottom: 8px;
+    }
+
+    .btn-more-info {
+        background: transparent;
+        border: 2px solid #4ECC5A;
+        color: #4ECC5A;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+
+    .btn-more-info:hover {
+        background: #4ECC5A;
+        color: #fff;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .main-card {
+            padding: 25px;
+        }
+
+        .upload-area {
+            padding: 30px 15px;
+        }
+
+        .upload-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+
+<div class="container">
+    <!-- Hero Section -->
+    <div class="hero-section fade-in">
+        <h1 class="hero-title">🌿 AI Plant Disease Detection</h1>
+        <p class="hero-subtitle">Upload a leaf image and let our AI diagnose plant diseases instantly</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <div class="main-card fade-in">
+                <div class="upload-section">
+                    <form action="/submit" method="POST" enctype="multipart/form-data" id="upload-form">
+                        <div class="upload-area" id="drop-area">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <h4 class="upload-title">Drag & Drop your image here</h4>
+                            <p class="upload-subtitle">or click the buttons below to upload</p>
+                            
+                            <div class="upload-buttons">
+                                <label for="actual-btn" class="btn-upload">
+                                    <i class="fas fa-folder-open"></i> Choose File
+                                </label>
+                                <button type="button" id="camera-btn" class="btn-camera">
+                                    <i class="fas fa-camera"></i> Open Camera
+                                </button>
+                            </div>
+                            
+                            <input type="file" id="actual-btn" hidden name="image" accept="image/*" />
+                        </div>
+
+                        <div class="file-name" id="file-chosen">
+                            <i class="fas fa-image me-2"></i>No file selected
+                        </div>
+
+                        <!-- Preview Container -->
+                        <div class="preview-container" id="preview-container">
+                            <img id="preview" src="#" alt="Preview" />
+                        </div>
+
+                        <!-- Camera Container -->
+                        <div class="camera-container" id="camera-container">
+                            <video id="camera-feed" autoplay playsinline></video>
+                            <button type="button" id="capture-btn" class="btn-capture">
+                                <i class="fas fa-circle"></i>
+                            </button>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-search me-2"></i>Analyze Plant
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6 fade-in">
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h5>Why Detect Plant Diseases?</h5>
+                <p>Plant diseases significantly affect growth and crop yield. Early detection is crucial for:</p>
+                <ul style="color: #555; padding-left: 20px; margin-top: 10px;">
+                    <li>Preventing widespread infection</li>
+                    <li>Saving time and resources</li>
+                    <li>Ensuring healthy crop production</li>
+                    <li>Reducing economic losses</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6 fade-in">
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h5>Prevention Tips</h5>
+                <ol>
+                    <li>Follow good sanitation practices</li>
+                    <li>Fertilize to keep plants healthy</li>
+                    <li>Inspect plants before bringing home</li>
+                    <li>Allow soil to warm before planting</li>
+                    <li>Rotate crops regularly</li>
+                    <li>Provide good air circulation</li>
+                </ol>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const actualBtn = document.getElementById('actual-btn');
+    const fileChosen = document.getElementById('file-chosen');
+    const dropArea = document.getElementById('drop-area');
+    const previewContainer = document.getElementById('preview-container');
+    const preview = document.getElementById('preview');
+    let capturedFile = null;
+
+    // File input change
+    actualBtn.addEventListener('change', function () {
+        if (this.files[0]) {
+            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>${this.files[0].name}`;
+            showPreview(this.files[0]);
+        }
+    });
+
+    // Show preview
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+
+    // Drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'));
+    });
+
+    dropArea.addEventListener('drop', function(e) {
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            actualBtn.files = files;
+            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>${files[0].name}`;
+            showPreview(files[0]);
+        }
+    });
+
+    // Camera functionality
+    document.getElementById('camera-btn').addEventListener('click', function() {
+        document.getElementById('camera-container').style.display = 'block';
+        startCamera();
+    });
+
+    async function startCamera() {
+        const video = document.getElementById('camera-feed');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+        } catch (err) {
+            console.error('Camera error:', err);
+            alert('Unable to access camera. Please use file upload instead.');
+        }
+    }
+
+    document.getElementById('capture-btn').addEventListener('click', function() {
+        const video = document.getElementById('camera-feed');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        
+        canvas.toBlob(function(blob) {
+            capturedFile = new File([blob], "captured_image.jpg", { type: 'image/jpeg' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(capturedFile);
+            actualBtn.files = dataTransfer.files;
+            
+            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>Photo captured`;
+            preview.src = dataUrl;
+            previewContainer.style.display = 'block';
+            
+            // Stop camera
+            video.srcObject.getTracks().forEach(track => track.stop());
+            document.getElementById('camera-container').style.display = 'none';
+        }, 'image/jpeg');
+    });
+</script>
+
+{% endblock body %}
