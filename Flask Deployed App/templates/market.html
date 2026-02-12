@@ -241,9 +241,9 @@ Supplement Market
     <div class="products-grid">
         {% for index in range(0, supplement_name | length) %}
         {% if index != 4 %}
-        <div class="product-card fade-in {% if index==3 or index==5 or index==7 or index==11 or index==15 or index==18 or index==20 or index==23 or index==24 or index==25 or index==28 or index==38 %}fertilizer{% else %}supplement{% endif %}">
-            
-            {% if index==3 or index==5 or index==7 or index==11 or index==15 or index==18 or index==20 or index==23 or index==24 or index==25 or index==28 or index==38 %}
+        <div class="product-card fade-in {% if index in healthy_indices %}fertilizer{% else %}supplement{% endif %}">
+
+            {% if index in healthy_indices %}
             <span class="product-badge badge-fertilizer">
                 <i class="fas fa-leaf me-1"></i>Fertilizer
             </span>
@@ -259,7 +259,7 @@ Supplement Market
 
             <div class="product-info">
                 <p class="product-category">
-                    {% if index==3 or index==5 or index==7 or index==11 or index==15 or index==18 or index==20 or index==23 or index==24 or index==25 or index==28 or index==38 %}
+                    {% if index in healthy_indices %}
                     For Healthy Plants
                     {% else %}
                     For Disease Treatment

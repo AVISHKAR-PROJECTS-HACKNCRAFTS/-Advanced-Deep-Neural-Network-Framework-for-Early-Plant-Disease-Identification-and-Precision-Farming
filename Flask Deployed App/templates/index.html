@@ -275,6 +275,36 @@ AI Engine
         color: #fff;
     }
 
+    .btn-mic {
+        background: transparent;
+        color: #ff4757;
+        border: 2px solid #ff4757;
+        padding: 12px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-mic:hover {
+        background: #ff4757;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    .voice-feedback {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: rgba(255, 71, 87, 0.1);
+        border-radius: 30px;
+        color: #ff4757;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
     @media (max-width: 768px) {
         .hero-title {
             font-size: 2rem;
@@ -320,7 +350,11 @@ AI Engine
                                 <button type="button" id="camera-btn" class="btn-camera">
                                     <i class="fas fa-camera"></i> Open Camera
                                 </button>
+                                <button type="button" id="mic-btn" class="btn-mic" onclick="toggleMic()">
+                                    <i class="fas fa-microphone"></i> Voice Command
+                                </button>
                             </div>
+                            <div id="voice-feedback" class="voice-feedback" style="display:none;"></div>
                             
                             <input type="file" id="actual-btn" hidden name="image" accept="image/*" />
                         </div>

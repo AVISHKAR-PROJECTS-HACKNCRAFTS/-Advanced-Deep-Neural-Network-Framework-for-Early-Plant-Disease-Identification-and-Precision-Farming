@@ -224,56 +224,159 @@
         animation: pulse 2s infinite;
     }
 
-    .status-dot.healthy {
-        background: #4ECC5A;
-    }
-
-    .status-dot.disease {
-        background: #ff6b6b;
-    }
+    .status-dot.healthy { background: #4ECC5A; }
+    .status-dot.disease { background: #ff6b6b; }
 
     @keyframes pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.7; transform: scale(1.1); }
     }
 
-    .divider {
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #4ECC5A, transparent);
-        margin: 40px 0;
+    /* Confidence Meter */
+    .confidence-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 20px;
+        padding: 25px 30px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .confidence-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 15px;
+    }
+
+    .confidence-meter {
+        flex: 1;
+        height: 12px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1.5s ease;
+    }
+
+    .confidence-fill.confidence-high { background: linear-gradient(90deg, #4ECC5A, #2d8f4e); }
+    .confidence-fill.confidence-medium { background: linear-gradient(90deg, #f0c040, #e6a817); }
+    .confidence-fill.confidence-low { background: linear-gradient(90deg, #ff9f43, #ee5a24); }
+
+    .confidence-value { font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
+    .confidence-text-high { color: #2d8f4e; }
+    .confidence-text-medium { color: #e6a817; }
+    .confidence-text-low { color: #ee5a24; }
+
+    .severity-badges { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    .severity-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .severity-healthy { background: #e8f5e9; color: #2d8f4e; }
+    .severity-mild { background: #fff3e0; color: #ef6c00; }
+    .severity-moderate { background: #fff8e1; color: #f9a825; }
+    .severity-critical { background: #ffebee; color: #c62828; }
+
+    .alternatives-section {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .alternatives-section h6 { color: #1a5c2e; font-weight: 600; margin-bottom: 12px; }
+
+    .alt-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .alt-name { flex: 1; color: #555; font-weight: 500; }
+    .alt-confidence { font-weight: 700; color: #1a5c2e; }
+
+    .voice-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-voice {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: #fff;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-voice:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .btn-report {
+        background: linear-gradient(135deg, #5f27cd, #341f97);
+        border: none;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(95, 39, 205, 0.4);
+    }
+
+    .btn-report:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(95, 39, 205, 0.5);
+    }
+
+    .btn-reported {
+        background: linear-gradient(135deg, #4ECC5A, #2d8f4e) !important;
+        box-shadow: 0 10px 30px rgba(78, 204, 90, 0.4) !important;
     }
 
     @media (max-width: 768px) {
-        .result-title {
-            font-size: 1.8rem;
-            flex-direction: column;
-        }
-
-        .info-card {
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .image-card img {
-            height: 220px;
-        }
+        .result-title { font-size: 1.8rem; flex-direction: column; }
+        .info-card { padding: 20px; margin-bottom: 20px; }
+        .image-card img { height: 220px; }
+        .confidence-header { flex-direction: column; gap: 10px; }
     }
 </style>
+
+<!-- Hidden text for voice output -->
+<div id="speakable-text" style="display:none;">
+Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} percent. Recommended supplement: {{sname}}.
+</div>
 
 <div class="container">
     <!-- Result Hero -->
     <div class="result-hero fade-in">
         <h1 class="result-title">
-            <span>{{title}}</span>
-            <span>🍂</span>
+            <span data-translatable>{{title}}</span>
         </h1>
-        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
+        {% if is_healthy %}
         <span class="result-badge badge-healthy">
             <i class="fas fa-check-circle me-2"></i>Healthy Plant
         </span>
         <div class="status-indicator">
             <span class="status-dot healthy"></span>
-            <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">No disease detected</span>
+            <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;" data-translatable>No disease detected</span>
         </div>
         {% else %}
         <span class="result-badge badge-disease">
@@ -281,9 +384,58 @@
         </span>
         <div class="status-indicator">
             <span class="status-dot disease"></span>
-            <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Treatment recommended</span>
+            <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;" data-translatable>Treatment recommended</span>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Voice & Action Buttons -->
+    <div class="text-center mb-4 fade-in">
+        <div class="voice-actions">
+            <button id="listen-btn" class="btn-voice" onclick="toggleSpeech()">
+                <i class="fas fa-volume-up"></i> <span data-translatable>Listen</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Confidence & Severity Section -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="confidence-card fade-in">
+                <div class="confidence-header">
+                    <div class="confidence-meter">
+                        <div class="confidence-fill confidence-{{confidence_color}}"
+                             style="width: {{confidence}}%"></div>
+                    </div>
+                    <span class="confidence-value confidence-text-{{confidence_color}}">
+                        {{confidence}}% Confidence
+                    </span>
+                </div>
+                <div class="severity-badges">
+                    <span class="severity-badge severity-{{severity|lower}}">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        <span data-translatable>Severity: {{severity}}</span>
+                    </span>
+                </div>
+
+                {% if confidence < 70 and alternatives|length > 0 %}
+                <div class="alternatives-section">
+                    <h6><i class="fas fa-list-ol me-2"></i><span data-translatable>Alternative Predictions</span></h6>
+                    <div class="alternatives-list">
+                        {% for alt in alternatives %}
+                        <div class="alt-item">
+                            <span class="alt-name" data-translatable>{{alt.name}}</span>
+                            <span class="alt-confidence">{{alt.confidence}}%</span>
+                            <span class="severity-badge severity-{{alt.severity|lower}}">
+                                {{alt.severity}}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <!-- Image Section -->
@@ -308,14 +460,14 @@
                         <i class="fas fa-info-circle"></i>
                     </div>
                     <h5 class="info-card-title">
-                        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
-                        Tips to Grow Healthy Plants
+                        {% if is_healthy %}
+                        <span data-translatable>Tips to Grow Healthy Plants</span>
                         {% else %}
-                        Brief Description
+                        <span data-translatable>Brief Description</span>
                         {% endif %}
                     </h5>
                 </div>
-                <div class="info-card-content">
+                <div class="info-card-content" data-translatable>
                     {{desc}}
                 </div>
             </div>
@@ -326,21 +478,21 @@
             <div class="info-card">
                 <div class="info-card-header">
                     <div class="info-card-icon warning">
-                        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
+                        {% if is_healthy %}
                         <i class="fas fa-star"></i>
                         {% else %}
                         <i class="fas fa-shield-alt"></i>
                         {% endif %}
                     </div>
                     <h5 class="info-card-title">
-                        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
-                        Benefits
+                        {% if is_healthy %}
+                        <span data-translatable>Benefits</span>
                         {% else %}
-                        Prevention Steps
+                        <span data-translatable>Prevention Steps</span>
                         {% endif %}
                     </h5>
                 </div>
-                <div class="info-card-content">
+                <div class="info-card-content" data-translatable>
                     {{prevent}}
                 </div>
             </div>
@@ -354,24 +506,36 @@
             <div class="info-card supplement-card">
                 <div class="info-card-header" style="justify-content: center;">
                     <div class="info-card-icon supplement">
-                        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
+                        {% if is_healthy %}
                         <i class="fas fa-seedling"></i>
                         {% else %}
                         <i class="fas fa-prescription-bottle"></i>
                         {% endif %}
                     </div>
                     <h5 class="info-card-title">
-                        {% if pred==3 or pred==5 or pred==7 or pred==11 or pred==15 or pred==18 or pred==20 or pred==23 or pred==24 or pred==25 or pred==28 or pred==38 %}
-                        Recommended Fertilizer
+                        {% if is_healthy %}
+                        <span data-translatable>Recommended Fertilizer</span>
                         {% else %}
-                        Recommended Supplement
+                        <span data-translatable>Recommended Supplement</span>
                         {% endif %}
                     </h5>
                 </div>
                 <img src="{{simage}}" alt="Supplement" class="supplement-image">
-                <p class="supplement-name">{{sname}}</p>
+                <p class="supplement-name" data-translatable>{{sname}}</p>
             </div>
         </div>
+    </div>
+    {% endif %}
+
+    <!-- Report to Community Button (only for diseases) -->
+    {% if not is_healthy and pred != 4 %}
+    <div class="text-center mt-3 mb-3 fade-in">
+        <button id="report-alert-btn" class="btn-report" onclick="reportAlert()">
+            <i class="fas fa-bell me-2"></i>Report to Community
+        </button>
+        <p class="text-white mt-2" style="font-size: 0.85rem; opacity: 0.8;" data-translatable>
+            Help others by reporting this disease in your area
+        </p>
     </div>
     {% endif %}
 
@@ -379,9 +543,97 @@
     <div class="text-center fade-in">
         <a href="/index" class="btn-back">
             <i class="fas fa-arrow-left"></i>
-            Analyze Another Plant
+            <span data-translatable>Analyze Another Plant</span>
         </a>
     </div>
 </div>
+
+<script>
+// ── Report to Community ──────────────────────────────────────────────────
+function reportAlert() {
+    var btn = document.getElementById('report-alert-btn');
+    btn.disabled = true;
+    btn.textContent = '';
+    var spinIcon = document.createElement('i');
+    spinIcon.className = 'fas fa-spinner fa-spin me-2';
+    btn.appendChild(spinIcon);
+    btn.appendChild(document.createTextNode('Getting location...'));
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                sendAlert(position.coords.latitude, position.coords.longitude);
+            },
+            function(error) {
+                sendAlert(null, null);
+            },
+            { timeout: 10000 }
+        );
+    } else {
+        sendAlert(null, null);
+    }
+}
+
+function sendAlert(lat, lng) {
+    var btn = document.getElementById('report-alert-btn');
+
+    var regionPromise;
+    if (lat && lng) {
+        regionPromise = fetch(
+            'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json'
+        )
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            return (data.address && (data.address.state || data.address.county)) || 'Unknown';
+        })
+        .catch(function() { return 'Unknown'; });
+    } else {
+        regionPromise = Promise.resolve('Unknown');
+    }
+
+    regionPromise.then(function(regionName) {
+        fetch('/api/report-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                disease_name: '{{ title }}',
+                disease_index: {{ pred }},
+                severity: '{{ severity }}',
+                confidence: {{ confidence }},
+                latitude: lat,
+                longitude: lng,
+                region_name: regionName,
+                image_url: '{{ image_url }}',
+                description: ''
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.textContent = '';
+            if (data.success) {
+                var checkIcon = document.createElement('i');
+                checkIcon.className = 'fas fa-check me-2';
+                btn.appendChild(checkIcon);
+                btn.appendChild(document.createTextNode('Reported!'));
+                btn.classList.add('btn-reported');
+            } else {
+                var errIcon = document.createElement('i');
+                errIcon.className = 'fas fa-times me-2';
+                btn.appendChild(errIcon);
+                btn.appendChild(document.createTextNode('Failed'));
+                btn.disabled = false;
+            }
+        })
+        .catch(function() {
+            btn.textContent = '';
+            var errIcon = document.createElement('i');
+            errIcon.className = 'fas fa-times me-2';
+            btn.appendChild(errIcon);
+            btn.appendChild(document.createTextNode('Failed'));
+            btn.disabled = false;
+        });
+    });
+}
+</script>
 
 {% endblock body %}
