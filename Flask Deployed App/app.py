@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from flask import Flask, redirect, render_template, request, jsonify
 from PIL import Image
 import torchvision.transforms.functional as TF
@@ -113,6 +114,34 @@ app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# ── SQLite Fallback for Alerts ────────────────────────────────────────────
+ALERTS_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alerts.db')
+
+def init_sqlite():
+    conn = sqlite3.connect(ALERTS_DB)
+    conn.execute('''CREATE TABLE IF NOT EXISTS disease_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        disease_name TEXT, disease_index INTEGER, severity TEXT,
+        confidence REAL, latitude REAL, longitude REAL,
+        region_name TEXT, image_url TEXT, description TEXT,
+        reported_by TEXT DEFAULT 'anonymous',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS alert_subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT, region_name TEXT,
+        UNIQUE(email, region_name)
+    )''')
+    conn.commit()
+    conn.close()
+
+init_sqlite()
+
+def get_sqlite():
+    conn = sqlite3.connect(ALERTS_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 @app.route('/')
 @app.route('/index')
@@ -202,15 +231,20 @@ def search_disease():
 
 # ── Translation API ────────────────────────────────────────────────────────
 
-@app.route('/api/translate')
+@app.route('/api/translate', methods=['GET', 'POST'])
 def translate_text():
-    text = request.args.get('text', '')
-    dest = request.args.get('dest', 'en')
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        text = data.get('text', '')
+        dest = data.get('dest', 'en')
+    else:
+        text = request.args.get('text', '')
+        dest = request.args.get('dest', 'en')
 
     if not text or dest == 'en':
         return jsonify({'translated': text})
 
-    cache_key = (hash(text[:200]), dest)
+    cache_key = (hash(text), dest)
     if cache_key in translation_cache:
         return jsonify({'translated': translation_cache[cache_key]})
 
@@ -230,32 +264,41 @@ def alerts_page():
 
 @app.route('/api/alerts')
 def get_alerts():
-    sb = get_supabase()
-    if not sb:
-        return jsonify({'error': 'Database not configured', 'alerts': []}), 503
-
     region = request.args.get('region', '')
 
+    sb = get_supabase()
+    if sb:
+        try:
+            query = sb.table('disease_alerts') \
+                .select('*') \
+                .order('created_at', desc=True) \
+                .limit(100)
+            if region:
+                query = query.ilike('region_name', f'%{region}%')
+            response = query.execute()
+            return jsonify({'alerts': response.data})
+        except Exception as e:
+            return jsonify({'error': str(e), 'alerts': []}), 500
+
+    # SQLite fallback
     try:
-        query = sb.table('disease_alerts') \
-            .select('*') \
-            .order('created_at', desc=True) \
-            .limit(100)
-
+        conn = get_sqlite()
         if region:
-            query = query.ilike('region_name', f'%{region}%')
-
-        response = query.execute()
-        return jsonify({'alerts': response.data})
+            rows = conn.execute(
+                'SELECT * FROM disease_alerts WHERE region_name LIKE ? ORDER BY created_at DESC LIMIT 100',
+                (f'%{region}%',)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                'SELECT * FROM disease_alerts ORDER BY created_at DESC LIMIT 100'
+            ).fetchall()
+        conn.close()
+        return jsonify({'alerts': [dict(row) for row in rows]})
     except Exception as e:
         return jsonify({'error': str(e), 'alerts': []}), 500
 
 @app.route('/api/report-alert', methods=['POST'])
 def report_alert():
-    sb = get_supabase()
-    if not sb:
-        return jsonify({'error': 'Database not configured'}), 503
-
     data = request.get_json()
 
     required_fields = ['disease_name', 'disease_index', 'severity', 'confidence']
@@ -276,18 +319,37 @@ def report_alert():
         'reported_by': data.get('reported_by', 'anonymous'),
     }
 
+    sb = get_supabase()
+    if sb:
+        try:
+            response = sb.table('disease_alerts').insert(alert).execute()
+            return jsonify({'success': True, 'alert': response.data[0]})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # SQLite fallback
     try:
-        response = sb.table('disease_alerts').insert(alert).execute()
-        return jsonify({'success': True, 'alert': response.data[0]})
+        conn = get_sqlite()
+        cursor = conn.execute(
+            '''INSERT INTO disease_alerts
+               (disease_name, disease_index, severity, confidence,
+                latitude, longitude, region_name, image_url, description, reported_by)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (alert['disease_name'], alert['disease_index'], alert['severity'],
+             alert['confidence'], alert['latitude'], alert['longitude'],
+             alert['region_name'], alert['image_url'], alert['description'],
+             alert['reported_by'])
+        )
+        conn.commit()
+        alert['id'] = cursor.lastrowid
+        alert['created_at'] = None
+        conn.close()
+        return jsonify({'success': True, 'alert': alert})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe_alerts():
-    sb = get_supabase()
-    if not sb:
-        return jsonify({'error': 'Database not configured'}), 503
-
     data = request.get_json()
     email = data.get('email', '').strip()
     region = data.get('region_name', '').strip()
@@ -295,15 +357,32 @@ def subscribe_alerts():
     if not email or not region:
         return jsonify({'error': 'Email and region are required'}), 400
 
+    sb = get_supabase()
+    if sb:
+        try:
+            response = sb.table('alert_subscriptions').insert({
+                'email': email,
+                'region_name': region
+            }).execute()
+            return jsonify({'success': True})
+        except Exception as e:
+            if 'duplicate' in str(e).lower() or '23505' in str(e):
+                return jsonify({'success': True, 'message': 'Already subscribed'})
+            return jsonify({'error': str(e)}), 500
+
+    # SQLite fallback
     try:
-        response = sb.table('alert_subscriptions').insert({
-            'email': email,
-            'region_name': region
-        }).execute()
+        conn = get_sqlite()
+        conn.execute(
+            'INSERT INTO alert_subscriptions (email, region_name) VALUES (?, ?)',
+            (email, region)
+        )
+        conn.commit()
+        conn.close()
         return jsonify({'success': True})
+    except sqlite3.IntegrityError:
+        return jsonify({'success': True, 'message': 'Already subscribed'})
     except Exception as e:
-        if 'duplicate' in str(e).lower() or '23505' in str(e):
-            return jsonify({'success': True, 'message': 'Already subscribed'})
         return jsonify({'error': str(e)}), 500
 
 

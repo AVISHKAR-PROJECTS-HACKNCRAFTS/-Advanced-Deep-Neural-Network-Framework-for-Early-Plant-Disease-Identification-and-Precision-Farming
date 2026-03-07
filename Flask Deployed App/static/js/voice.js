@@ -355,7 +355,27 @@
         var text = (el.textContent || el.innerText || '').trim();
         if (!text) return;
 
-        speakText(text);
+        // If non-English and text hasn't been translated yet, translate on-the-fly
+        if (currentLang !== 'en' && el.hasAttribute('data-original-text') &&
+            text === el.getAttribute('data-original-text').trim()) {
+            fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, dest: currentLang })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.translated) {
+                    el.textContent = data.translated;
+                    speakText(data.translated);
+                } else {
+                    speakText(text);
+                }
+            })
+            .catch(function () { speakText(text); });
+        } else {
+            speakText(text);
+        }
     };
 
     function updateSpeakButton(active) {
@@ -398,7 +418,11 @@
             var original = el.getAttribute('data-original-text');
             if (!original || !original.trim()) return;
 
-            fetch('/api/translate?text=' + encodeURIComponent(original) + '&dest=' + lang)
+            fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: original, dest: lang })
+            })
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     if (data.translated) {

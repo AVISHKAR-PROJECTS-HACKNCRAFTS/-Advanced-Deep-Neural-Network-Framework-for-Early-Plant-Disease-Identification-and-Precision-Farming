@@ -514,6 +514,9 @@ AI Engine
             // Stop camera
             video.srcObject.getTracks().forEach(track => track.stop());
             document.getElementById('camera-container').style.display = 'none';
+
+            // Auto-submit for disease detection
+            document.getElementById('upload-form').submit();
         }, 'image/jpeg');
     });
 </script>
