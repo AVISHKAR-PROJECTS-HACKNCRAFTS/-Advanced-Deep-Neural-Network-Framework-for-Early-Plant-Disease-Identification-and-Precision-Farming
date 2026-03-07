@@ -476,48 +476,108 @@ AI Engine
     });
 
     // Camera functionality
+    var cameraStream = null;
+    var cameraReady = false;
+
     document.getElementById('camera-btn').addEventListener('click', function() {
-        document.getElementById('camera-container').style.display = 'block';
+        var container = document.getElementById('camera-container');
+        var captureBtn = document.getElementById('capture-btn');
+        container.style.display = 'block';
+        captureBtn.disabled = true;
+        captureBtn.style.opacity = '0.5';
+        cameraReady = false;
         startCamera();
     });
 
     async function startCamera() {
-        const video = document.getElementById('camera-feed');
+        var video = document.getElementById('camera-feed');
+        var captureBtn = document.getElementById('capture-btn');
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+            video.srcObject = cameraStream;
+            video.onloadedmetadata = function() {
+                video.play();
+            };
+            video.onplaying = function() {
+                cameraReady = true;
+                captureBtn.disabled = false;
+                captureBtn.style.opacity = '1';
+            };
         } catch (err) {
             console.error('Camera error:', err);
-            alert('Unable to access camera. Please use file upload instead.');
+            alert('Unable to access camera. Please make sure you have given camera permission and try again.');
+            document.getElementById('camera-container').style.display = 'none';
         }
     }
 
-    document.getElementById('capture-btn').addEventListener('click', function() {
-        const video = document.getElementById('camera-feed');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        
-        canvas.toBlob(function(blob) {
-            capturedFile = new File([blob], "captured_image.jpg", { type: 'image/jpeg' });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(capturedFile);
-            actualBtn.files = dataTransfer.files;
-            
-            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>Photo captured`;
-            preview.src = dataUrl;
-            previewContainer.style.display = 'block';
-            
-            // Stop camera
-            video.srcObject.getTracks().forEach(track => track.stop());
-            document.getElementById('camera-container').style.display = 'none';
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) { track.stop(); });
+            cameraStream = null;
+        }
+        cameraReady = false;
+        document.getElementById('camera-container').style.display = 'none';
+    }
 
-            // Auto-submit for disease detection
-            document.getElementById('upload-form').submit();
-        }, 'image/jpeg');
+    document.getElementById('capture-btn').addEventListener('click', function() {
+        if (!cameraReady) {
+            alert('Camera is still loading. Please wait a moment.');
+            return;
+        }
+
+        var video = document.getElementById('camera-feed');
+        var canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Show preview
+        fileChosen.textContent = 'Photo captured - Analyzing...';
+        preview.src = dataUrl;
+        previewContainer.style.display = 'block';
+
+        // Stop camera
+        stopCamera();
+
+        // Convert to blob and submit via hidden form with proper file
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                alert('Failed to capture image. Please try again.');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('image', blob, 'captured_image.jpg');
+
+            fetch('/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
+                return response.text();
+            })
+            .then(function(html) {
+                if (html) {
+                    // Replace page content with the result
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
+                    document.documentElement.replaceWith(doc.documentElement);
+                }
+            })
+            .catch(function(err) {
+                console.error('Upload error:', err);
+                alert('Failed to upload image. Please try again.');
+                fileChosen.textContent = 'No file selected';
+            });
+        }, 'image/jpeg', 0.9);
     });
 </script>
 
