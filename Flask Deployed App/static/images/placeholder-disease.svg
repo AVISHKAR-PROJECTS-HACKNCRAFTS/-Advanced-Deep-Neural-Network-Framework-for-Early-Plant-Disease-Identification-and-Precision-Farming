@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect fill="#fff8f0" width="200" height="200" rx="16"/>
+  <ellipse cx="100" cy="80" rx="50" ry="40" fill="#c0e8c0" opacity="0.7"/>
+  <path d="M100 50 Q80 70 85 90 Q90 110 100 100 Q110 110 115 90 Q120 70 100 50Z" fill="#4ECC5A" opacity="0.6"/>
+  <path d="M100 100 L100 140" stroke="#2d8f4e" stroke-width="3" opacity="0.5"/>
+  <circle cx="82" cy="75" r="5" fill="#8B4513" opacity="0.4"/>
+  <circle cx="108" cy="82" r="4" fill="#8B4513" opacity="0.35"/>
+  <circle cx="95" cy="68" r="3" fill="#8B4513" opacity="0.3"/>
+  <text x="100" y="170" text-anchor="middle" fill="#555" font-size="13" font-family="sans-serif" font-weight="600">Disease Reference</text>
+  <text x="100" y="188" text-anchor="middle" fill="#888" font-size="10" font-family="sans-serif">Image Placeholder</text>
+</svg>

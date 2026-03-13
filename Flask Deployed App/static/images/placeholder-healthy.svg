@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect fill="#f0fff0" width="200" height="200" rx="16"/>
+  <ellipse cx="100" cy="80" rx="50" ry="40" fill="#c0e8c0" opacity="0.7"/>
+  <path d="M100 45 Q75 65 80 90 Q85 115 100 105 Q115 115 120 90 Q125 65 100 45Z" fill="#4ECC5A" opacity="0.8"/>
+  <path d="M100 105 L100 145" stroke="#2d8f4e" stroke-width="3"/>
+  <path d="M100 120 L85 110" stroke="#2d8f4e" stroke-width="2" opacity="0.5"/>
+  <path d="M100 130 L115 120" stroke="#2d8f4e" stroke-width="2" opacity="0.5"/>
+  <text x="100" y="170" text-anchor="middle" fill="#555" font-size="13" font-family="sans-serif" font-weight="600">Healthy Plant</text>
+  <text x="100" y="188" text-anchor="middle" fill="#888" font-size="10" font-family="sans-serif">Reference Image</text>
+</svg>
