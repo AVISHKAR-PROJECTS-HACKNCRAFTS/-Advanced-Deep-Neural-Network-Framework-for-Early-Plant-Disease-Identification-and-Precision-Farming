@@ -281,17 +281,31 @@
 
     function doSpeak(text) {
         var utterance = new SpeechSynthesisUtterance(text.trim());
-        utterance.lang = LANGUAGES[currentLang].speech;
+        var langCode = LANGUAGES[currentLang].speech;
+        utterance.lang = langCode;
         utterance.rate = 0.9;
 
-        // Try to pick a matching voice explicitly
+        // Try to pick a matching voice — use fuzzy matching for Windows compatibility
         var voices = synth.getVoices();
-        var langCode = LANGUAGES[currentLang].speech;
+        var langPrefix = langCode.split('-')[0]; // e.g. 'hi' from 'hi-IN'
+        var bestVoice = null;
+
         for (var i = 0; i < voices.length; i++) {
-            if (voices[i].lang === langCode) {
-                utterance.voice = voices[i];
-                break;
+            var vLang = voices[i].lang.replace('_', '-'); // normalize hi_IN -> hi-IN
+            if (vLang === langCode) {
+                bestVoice = voices[i];
+                break; // exact match, use it
             }
+            if (!bestVoice && vLang.split('-')[0] === langPrefix) {
+                bestVoice = voices[i]; // prefix match, keep looking for exact
+            }
+        }
+
+        if (bestVoice) {
+            utterance.voice = bestVoice;
+            console.log('[speech] Using voice:', bestVoice.name, bestVoice.lang);
+        } else {
+            console.warn('[speech] No voice found for', langCode, '- browser will use default');
         }
 
         utterance.onstart = function () {
@@ -355,24 +369,37 @@
         var text = (el.textContent || el.innerText || '').trim();
         if (!text) return;
 
-        // If non-English and text hasn't been translated yet, translate on-the-fly
-        if (currentLang !== 'en' && el.hasAttribute('data-original-text') &&
-            text === el.getAttribute('data-original-text').trim()) {
-            fetch('/api/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text, dest: currentLang })
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.translated) {
-                    el.textContent = data.translated;
-                    speakText(data.translated);
-                } else {
-                    speakText(text);
-                }
-            })
-            .catch(function () { speakText(text); });
+        console.log('[speech] Current lang:', currentLang, '| Text length:', text.length);
+
+        // If non-English, always translate before speaking
+        if (currentLang !== 'en') {
+            // Check if text is still in English (original text matches current content)
+            var originalText = el.hasAttribute('data-original-text')
+                ? el.getAttribute('data-original-text').trim() : '';
+            var needsTranslation = !originalText || text === originalText;
+
+            if (needsTranslation) {
+                console.log('[speech] Translating before speaking...');
+                var textToTranslate = originalText || text;
+                fetch('/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textToTranslate, dest: currentLang })
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.translated && data.translated !== textToTranslate) {
+                        el.textContent = data.translated;
+                        speakText(data.translated);
+                    } else {
+                        speakText(text);
+                    }
+                })
+                .catch(function () { speakText(text); });
+            } else {
+                // Already translated, speak directly
+                speakText(text);
+            }
         } else {
             speakText(text);
         }
@@ -394,14 +421,42 @@
 
     // ── Translation ─────────────────────────────────────────────────────
 
+    // Show a small toast notification
+    function showToast(msg, duration) {
+        var existing = document.getElementById('translate-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.id = 'translate-toast';
+        toast.textContent = msg;
+        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a5c2e;color:#fff;padding:10px 24px;border-radius:50px;font-size:0.9rem;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;';
+        document.body.appendChild(toast);
+        if (duration) {
+            setTimeout(function () {
+                toast.style.opacity = '0';
+                setTimeout(function () { toast.remove(); }, 300);
+            }, duration);
+        }
+        return toast;
+    }
+
+    // Translate a chunk of texts via batch API
+    function translateChunk(texts, dest) {
+        return fetch('/api/translate-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texts: texts, dest: dest })
+        }).then(function (res) { return res.json(); });
+    }
+
     window.translatePage = function (lang) {
         currentLang = lang;
+        console.log('[translate] Language changed to:', lang);
 
         // Store originals on first call
         var elements = document.querySelectorAll('[data-translatable]');
         elements.forEach(function (el) {
             if (!el.hasAttribute('data-original-text')) {
-                el.setAttribute('data-original-text', el.textContent);
+                el.setAttribute('data-original-text', el.textContent.trim());
             }
         });
 
@@ -413,26 +468,81 @@
             return;
         }
 
-        // Translate each element
+        // Show visual feedback
+        var selector = document.getElementById('language-selector');
+        if (selector) { selector.style.opacity = '0.6'; selector.disabled = true; }
+
+        var langName = LANGUAGES[lang] ? LANGUAGES[lang].name : lang;
+        var toast = showToast('Translating to ' + langName + '...');
+
+        // Collect texts and elements
+        var textsToTranslate = [];
+        var elementsToUpdate = [];
+
         elements.forEach(function (el) {
             var original = el.getAttribute('data-original-text');
             if (!original || !original.trim()) return;
+            textsToTranslate.push(original.trim());
+            elementsToUpdate.push(el);
+        });
 
-            fetch('/api/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: original, dest: lang })
-            })
-                .then(function (res) { return res.json(); })
+        if (textsToTranslate.length === 0) {
+            if (toast) toast.remove();
+            return;
+        }
+
+        console.log('[translate] Translating', textsToTranslate.length, 'texts to', lang);
+
+        // Split into chunks of 5 to avoid timeout/rate limits
+        var CHUNK_SIZE = 5;
+        var chunks = [];
+        for (var i = 0; i < textsToTranslate.length; i += CHUNK_SIZE) {
+            chunks.push({
+                texts: textsToTranslate.slice(i, i + CHUNK_SIZE),
+                startIdx: i
+            });
+        }
+
+        // Process chunks sequentially with small delays
+        var chunkIndex = 0;
+        function processNext() {
+            if (chunkIndex >= chunks.length) {
+                // All done
+                console.log('[translate] All', elementsToUpdate.length, 'elements translated');
+                if (toast) {
+                    toast.textContent = 'Translated to ' + langName + '!';
+                    setTimeout(function () {
+                        toast.style.opacity = '0';
+                        setTimeout(function () { toast.remove(); }, 300);
+                    }, 1500);
+                }
+                if (selector) { selector.style.opacity = '1'; selector.disabled = false; }
+                return;
+            }
+
+            var chunk = chunks[chunkIndex];
+            translateChunk(chunk.texts, lang)
                 .then(function (data) {
-                    if (data.translated) {
-                        el.textContent = data.translated;
+                    if (data.translations) {
+                        for (var j = 0; j < data.translations.length; j++) {
+                            var idx = chunk.startIdx + j;
+                            if (idx < elementsToUpdate.length && data.translations[j]) {
+                                elementsToUpdate[idx].textContent = data.translations[j];
+                            }
+                        }
                     }
+                    chunkIndex++;
+                    // Small delay between chunks to avoid rate limiting
+                    setTimeout(processNext, 200);
                 })
                 .catch(function (err) {
-                    console.warn('Translation failed for element:', err);
+                    console.error('[translate] Chunk failed:', err);
+                    chunkIndex++;
+                    setTimeout(processNext, 500);
                 });
-        });
+        }
+
+        processNext();
     };
 
     // ── Language Selector Handler ────────────────────────────────────────

@@ -264,6 +264,43 @@ def translate_text():
         print(f"Translation error: {e}")
         return jsonify({'translated': text, 'error': str(e)})
 
+@app.route('/api/translate-batch', methods=['POST'])
+def translate_batch():
+    """Translate multiple texts in a single request to avoid rate limiting."""
+    import time as _time
+    data = request.get_json(silent=True) or {}
+    texts = data.get('texts', [])
+    dest = data.get('dest', 'en')
+
+    if not texts or dest == 'en':
+        return jsonify({'translations': texts})
+
+    results = []
+    translator = GoogleTranslator(source='en', target=dest)
+    for text in texts:
+        if not text or not text.strip():
+            results.append(text)
+            continue
+
+        cache_key = (hash(text), dest)
+        if cache_key in translation_cache:
+            results.append(translation_cache[cache_key])
+            continue
+
+        try:
+            # Truncate very long texts to avoid Google Translate limits
+            t = text[:5000] if len(text) > 5000 else text
+            translated = translator.translate(t)
+            translation_cache[cache_key] = translated
+            results.append(translated)
+            _time.sleep(0.1)  # small delay between requests
+        except Exception as e:
+            print(f"Batch translation error: {e}")
+            results.append(text)
+            _time.sleep(0.5)
+
+    return jsonify({'translations': results})
+
 # ── Community Alerts ───────────────────────────────────────────────────────
 
 @app.route('/alerts')
