@@ -486,30 +486,59 @@ AI Engine
         captureBtn.disabled = true;
         captureBtn.style.opacity = '0.5';
         cameraReady = false;
+        fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Opening camera...';
         startCamera();
     });
 
     async function startCamera() {
         var video = document.getElementById('camera-feed');
         var captureBtn = document.getElementById('capture-btn');
-        try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
-            });
-            video.srcObject = cameraStream;
-            video.onloadedmetadata = function() {
-                video.play();
-            };
-            video.onplaying = function() {
-                cameraReady = true;
-                captureBtn.disabled = false;
-                captureBtn.style.opacity = '1';
-            };
-        } catch (err) {
-            console.error('Camera error:', err);
-            alert('Unable to access camera. Please make sure you have given camera permission and try again.');
+
+        // Check if camera API is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera not supported. Use HTTPS or localhost.';
             document.getElementById('camera-container').style.display = 'none';
+            return;
         }
+
+        // Try multiple camera configurations as fallback chain
+        var constraints = [
+            { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
+            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
+            { video: true }
+        ];
+
+        var stream = null;
+        for (var i = 0; i < constraints.length; i++) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
+                break;
+            } catch (err) {
+                console.warn('Camera constraint ' + i + ' failed:', err.message);
+            }
+        }
+
+        if (!stream) {
+            fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera access denied. Please allow camera permission.';
+            document.getElementById('camera-container').style.display = 'none';
+            return;
+        }
+
+        cameraStream = stream;
+        video.srcObject = stream;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('autoplay', 'true');
+        video.muted = true;
+
+        video.onloadedmetadata = function() {
+            video.play().catch(function(e) { console.warn('Video play error:', e); });
+        };
+        video.onplaying = function() {
+            cameraReady = true;
+            captureBtn.disabled = false;
+            captureBtn.style.opacity = '1';
+            fileChosen.innerHTML = '<i class="fas fa-camera me-2"></i>Camera ready - tap the red button to capture';
+        };
     }
 
     function stopCamera() {
@@ -523,7 +552,7 @@ AI Engine
 
     document.getElementById('capture-btn').addEventListener('click', function() {
         if (!cameraReady) {
-            alert('Camera is still loading. Please wait a moment.');
+            fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Camera still loading...';
             return;
         }
 
@@ -536,28 +565,42 @@ AI Engine
         var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
         // Show preview
-        fileChosen.textContent = 'Photo captured - Analyzing...';
         preview.src = dataUrl;
         previewContainer.style.display = 'block';
+        fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Photo captured - Analyzing...';
 
         // Stop camera
         stopCamera();
 
-        // Convert to blob and set it on the file input, then submit the real form
+        // Use fetch + FormData for maximum browser compatibility
         canvas.toBlob(function(blob) {
             if (!blob) {
-                alert('Failed to capture image. Please try again.');
+                fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Capture failed. Please try again.';
                 return;
             }
 
-            // Create a File from the blob and assign to the file input
-            var file = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
-            var dt = new DataTransfer();
-            dt.items.add(file);
-            actualBtn.files = dt.files;
+            var formData = new FormData();
+            formData.append('image', blob, 'captured_image.jpg');
 
-            // Submit the existing form natively
-            document.getElementById('upload-form').submit();
+            fetch('/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Server error: ' + response.status);
+            })
+            .then(function(html) {
+                document.open();
+                document.write(html);
+                document.close();
+            })
+            .catch(function(err) {
+                console.error('Upload error:', err);
+                fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Upload failed: ' + err.message;
+            });
         }, 'image/jpeg', 0.9);
     });
 </script>
