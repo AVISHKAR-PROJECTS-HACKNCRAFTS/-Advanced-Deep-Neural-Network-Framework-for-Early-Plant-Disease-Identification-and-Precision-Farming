@@ -154,45 +154,53 @@ def mobile_device_detected_page():
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
-    if request.method == 'POST':
-        image = request.files.get('image')
-        if not image or not image.filename:
-            return redirect('/')
-        filename = image.filename
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        image.save(file_path)
+    if request.method != 'POST':
+        return redirect('/')
 
+    image = request.files.get('image')
+    if not image or not image.filename:
+        return redirect('/')
+
+    filename = image.filename
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    image.save(file_path)
+
+    try:
         result = prediction(file_path)
-        pred = result['index']
-        confidence = result['confidence']
-        severity = result['severity']
-        alternatives = result['alternatives']
+    except Exception as e:
+        print(f"Prediction error: {e}")
+        return redirect('/')
 
-        title = disease_info['disease_name'][pred]
-        description = disease_info['description'][pred]
-        prevent = disease_info['Possible Steps'][pred]
-        image_url = disease_info['image_url'][pred]
-        supplement_name = supplement_info['supplement name'][pred]
-        supplement_image_url = supplement_info['supplement image'][pred]
-        supplement_buy_link = supplement_info['buy link'][pred]
+    pred = result['index']
+    confidence = result['confidence']
+    severity = result['severity']
+    alternatives = result['alternatives']
 
-        if confidence >= 90:
-            confidence_color = 'high'
-        elif confidence >= 70:
-            confidence_color = 'medium'
-        else:
-            confidence_color = 'low'
+    title = disease_info['disease_name'][pred]
+    description = disease_info['description'][pred]
+    prevent = disease_info['Possible Steps'][pred]
+    image_url = disease_info['image_url'][pred]
+    supplement_name = supplement_info['supplement name'][pred]
+    supplement_image_url = supplement_info['supplement image'][pred]
+    supplement_buy_link = supplement_info['buy link'][pred]
 
-        is_healthy = pred in HEALTHY_INDICES
+    if confidence >= 90:
+        confidence_color = 'high'
+    elif confidence >= 70:
+        confidence_color = 'medium'
+    else:
+        confidence_color = 'low'
 
-        return render_template('submit.html',
-            title=title, desc=description, prevent=prevent,
-            image_url=image_url, pred=pred,
-            sname=supplement_name, simage=supplement_image_url,
-            buy_link=supplement_buy_link,
-            confidence=confidence, severity=severity,
-            confidence_color=confidence_color,
-            alternatives=alternatives, is_healthy=is_healthy)
+    is_healthy = pred in HEALTHY_INDICES
+
+    return render_template('submit.html',
+        title=title, desc=description, prevent=prevent,
+        image_url=image_url, pred=pred,
+        sname=supplement_name, simage=supplement_image_url,
+        buy_link=supplement_buy_link,
+        confidence=confidence, severity=severity,
+        confidence_color=confidence_color,
+        alternatives=alternatives, is_healthy=is_healthy)
 
 @app.route('/market', methods=['GET', 'POST'])
 def market():

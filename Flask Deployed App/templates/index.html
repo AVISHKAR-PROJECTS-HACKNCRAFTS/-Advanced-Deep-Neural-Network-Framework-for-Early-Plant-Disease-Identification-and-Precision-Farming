@@ -328,8 +328,8 @@ AI Engine
 <div class="container">
     <!-- Hero Section -->
     <div class="hero-section fade-in">
-        <h1 class="hero-title">🌿 AI Plant Disease Detection</h1>
-        <p class="hero-subtitle">Upload a leaf image and let our AI diagnose plant diseases instantly</p>
+        <h1 class="hero-title" data-translatable>AI Plant Disease Detection</h1>
+        <p class="hero-subtitle" data-translatable>Upload a leaf image and let our AI diagnose plant diseases instantly</p>
     </div>
 
     <!-- Upload Section -->
@@ -340,18 +340,18 @@ AI Engine
                     <form action="/submit" method="POST" enctype="multipart/form-data" id="upload-form">
                         <div class="upload-area" id="drop-area">
                             <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <h4 class="upload-title">Drag & Drop your image here</h4>
-                            <p class="upload-subtitle">or click the buttons below to upload</p>
-                            
+                            <h4 class="upload-title" data-translatable>Drag & Drop your image here</h4>
+                            <p class="upload-subtitle" data-translatable>or click the buttons below to upload</p>
+
                             <div class="upload-buttons">
                                 <label for="actual-btn" class="btn-upload">
-                                    <i class="fas fa-folder-open"></i> Choose File
+                                    <i class="fas fa-folder-open"></i> <span data-translatable>Choose File</span>
                                 </label>
                                 <button type="button" id="camera-btn" class="btn-camera">
-                                    <i class="fas fa-camera"></i> Open Camera
+                                    <i class="fas fa-camera"></i> <span data-translatable>Open Camera</span>
                                 </button>
                                 <button type="button" id="mic-btn" class="btn-mic" onclick="toggleMic()">
-                                    <i class="fas fa-microphone"></i> Voice Command
+                                    <i class="fas fa-microphone"></i> <span data-translatable>Voice Command</span>
                                 </button>
                             </div>
                             <div id="voice-feedback" class="voice-feedback" style="display:none;"></div>
@@ -377,7 +377,7 @@ AI Engine
                         </div>
 
                         <button type="submit" class="btn-submit">
-                            <i class="fas fa-search me-2"></i>Analyze Plant
+                            <i class="fas fa-search me-2"></i><span data-translatable>Analyze Plant</span>
                         </button>
                     </form>
                 </div>
@@ -392,13 +392,13 @@ AI Engine
                 <div class="info-card-icon">
                     <i class="fas fa-question-circle"></i>
                 </div>
-                <h5>Why Detect Plant Diseases?</h5>
-                <p>Plant diseases significantly affect growth and crop yield. Early detection is crucial for:</p>
+                <h5 data-translatable>Why Detect Plant Diseases?</h5>
+                <p data-translatable>Plant diseases significantly affect growth and crop yield. Early detection is crucial for:</p>
                 <ul style="color: #555; padding-left: 20px; margin-top: 10px;">
-                    <li>Preventing widespread infection</li>
-                    <li>Saving time and resources</li>
-                    <li>Ensuring healthy crop production</li>
-                    <li>Reducing economic losses</li>
+                    <li data-translatable>Preventing widespread infection</li>
+                    <li data-translatable>Saving time and resources</li>
+                    <li data-translatable>Ensuring healthy crop production</li>
+                    <li data-translatable>Reducing economic losses</li>
                 </ul>
             </div>
         </div>
@@ -407,14 +407,14 @@ AI Engine
                 <div class="info-card-icon">
                     <i class="fas fa-shield-alt"></i>
                 </div>
-                <h5>Prevention Tips</h5>
+                <h5 data-translatable>Prevention Tips</h5>
                 <ol>
-                    <li>Follow good sanitation practices</li>
-                    <li>Fertilize to keep plants healthy</li>
-                    <li>Inspect plants before bringing home</li>
-                    <li>Allow soil to warm before planting</li>
-                    <li>Rotate crops regularly</li>
-                    <li>Provide good air circulation</li>
+                    <li data-translatable>Follow good sanitation practices</li>
+                    <li data-translatable>Fertilize to keep plants healthy</li>
+                    <li data-translatable>Inspect plants before bringing home</li>
+                    <li data-translatable>Allow soil to warm before planting</li>
+                    <li data-translatable>Rotate crops regularly</li>
+                    <li data-translatable>Provide good air circulation</li>
                 </ol>
                
             </div>
@@ -543,40 +543,21 @@ AI Engine
         // Stop camera
         stopCamera();
 
-        // Convert to blob and submit via hidden form with proper file
+        // Convert to blob and set it on the file input, then submit the real form
         canvas.toBlob(function(blob) {
             if (!blob) {
                 alert('Failed to capture image. Please try again.');
                 return;
             }
 
-            var formData = new FormData();
-            formData.append('image', blob, 'captured_image.jpg');
+            // Create a File from the blob and assign to the file input
+            var file = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            actualBtn.files = dt.files;
 
-            fetch('/submit', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(response) {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return null;
-                }
-                return response.text();
-            })
-            .then(function(html) {
-                if (html) {
-                    // Replace page content with the result
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(html, 'text/html');
-                    document.documentElement.replaceWith(doc.documentElement);
-                }
-            })
-            .catch(function(err) {
-                console.error('Upload error:', err);
-                alert('Failed to upload image. Please try again.');
-                fileChosen.textContent = 'No file selected';
-            });
+            // Submit the existing form natively
+            document.getElementById('upload-form').submit();
         }, 'image/jpeg', 0.9);
     });
 </script>

@@ -220,20 +220,20 @@ Supplement Market
 <div class="container">
     <!-- Hero Section -->
     <div class="market-hero fade-in">
-        <h1 class="market-title">🌿 Supplements & Fertilizers</h1>
-        <p class="market-subtitle">Quality products for healthy and diseased plants</p>
+        <h1 class="market-title" data-translatable>Supplements & Fertilizers</h1>
+        <p class="market-subtitle" data-translatable>Quality products for healthy and diseased plants</p>
     </div>
 
     <!-- Filter Tabs -->
     <div class="filter-tabs fade-in">
         <button class="filter-btn active" onclick="filterProducts('all')">
-            <i class="fas fa-th-large me-2"></i>All Products
+            <i class="fas fa-th-large me-2"></i><span data-translatable>All Products</span>
         </button>
         <button class="filter-btn" onclick="filterProducts('fertilizer')">
-            <i class="fas fa-seedling me-2"></i>Fertilizers
+            <i class="fas fa-seedling me-2"></i><span data-translatable>Fertilizers</span>
         </button>
         <button class="filter-btn" onclick="filterProducts('supplement')">
-            <i class="fas fa-prescription-bottle me-2"></i>Supplements
+            <i class="fas fa-prescription-bottle me-2"></i><span data-translatable>Supplements</span>
         </button>
     </div>
 
@@ -245,20 +245,21 @@ Supplement Market
 
             {% if index in healthy_indices %}
             <span class="product-badge badge-fertilizer">
-                <i class="fas fa-leaf me-1"></i>Fertilizer
+                <i class="fas fa-leaf me-1"></i><span data-translatable>Fertilizer</span>
             </span>
             {% else %}
             <span class="product-badge badge-supplement">
-                <i class="fas fa-plus-circle me-1"></i>Supplement
+                <i class="fas fa-plus-circle me-1"></i><span data-translatable>Supplement</span>
             </span>
             {% endif %}
 
             <div class="product-image-container">
-                <img src="{{supplement_image[index]}}" alt="{{supplement_name[index]}}" class="product-image">
+                <img src="{{supplement_image[index]}}" alt="{{supplement_name[index]}}" class="product-image"
+                     onerror="this.onerror=null;this.style.padding='30px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22180%22 viewBox=%220 0 180 180%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22180%22 height=%22180%22 rx=%2216%22/%3E%3Ctext x=%2290%22 y=%2280%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x=%2290%22 y=%22115%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2213%22 font-family=%22sans-serif%22%3EImage unavailable%3C/text%3E%3C/svg%3E';">
             </div>
 
             <div class="product-info">
-                <p class="product-category">
+                <p class="product-category" data-translatable>
                     {% if index in healthy_indices %}
                     For Healthy Plants
                     {% else %}

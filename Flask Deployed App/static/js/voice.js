@@ -440,8 +440,20 @@
     document.addEventListener('DOMContentLoaded', function () {
         var selector = document.getElementById('language-selector');
         if (selector) {
+            // Restore saved language from localStorage
+            var savedLang = localStorage.getItem('selectedLanguage');
+            if (savedLang && savedLang !== 'en' && LANGUAGES[savedLang]) {
+                selector.value = savedLang;
+                // Delay translation slightly to let the page fully render
+                setTimeout(function () {
+                    window.translatePage(savedLang);
+                }, 300);
+            }
+
             selector.addEventListener('change', function () {
-                window.translatePage(this.value);
+                var lang = this.value;
+                localStorage.setItem('selectedLanguage', lang);
+                window.translatePage(lang);
             });
         }
     });

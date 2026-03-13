@@ -442,7 +442,8 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
     <div class="row justify-content-center mb-5">
         <div class="col-lg-5 col-md-6">
             <div class="image-card fade-in">
-                <img src="{{image_url}}" alt="Analyzed Plant">
+                <img src="{{image_url}}" alt="Analyzed Plant"
+                     onerror="this.onerror=null;this.style.padding='40px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22200%22 viewBox=%220 0 280 200%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22280%22 height=%22200%22 rx=%2216%22/%3E%3Ctext x=%22140%22 y=%2290%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8D%83%3C/text%3E%3Ctext x=%22140%22 y=%22130%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2214%22 font-family=%22sans-serif%22%3EReference image unavailable%3C/text%3E%3C/svg%3E';">
                 <p class="image-label">
                     <i class="fas fa-leaf me-2"></i>Uploaded Image
                 </p>
@@ -520,7 +521,8 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
                         {% endif %}
                     </h5>
                 </div>
-                <img src="{{simage}}" alt="Supplement" class="supplement-image">
+                <img src="{{simage}}" alt="{{sname}}" class="supplement-image"
+                     onerror="this.onerror=null;this.style.padding='40px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22200%22 height=%22200%22 rx=%2216%22/%3E%3Ctext x=%22100%22 y=%2290%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x=%22100%22 y=%22130%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2214%22 font-family=%22sans-serif%22%3EImage unavailable%3C/text%3E%3C/svg%3E';">
                 <p class="supplement-name" data-translatable>{{sname}}</p>
             </div>
         </div>
