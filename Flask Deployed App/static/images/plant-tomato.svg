@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect fill="#fff5f0" width="250" height="250" rx="16"/>
+  <circle cx="125" cy="115" r="50" fill="#e74c3c" opacity="0.85"/>
+  <circle cx="125" cy="115" r="45" fill="#c0392b" opacity="0.2"/>
+  <path d="M108 68 Q115 60 125 65 Q135 60 142 68" fill="#4ECC5A" opacity="0.8"/>
+  <path d="M100 72 Q112 58 125 63 Q138 58 150 72" fill="#4ECC5A" opacity="0.5"/>
+  <path d="M125 65 Q128 50 130 45" stroke="#5d4037" stroke-width="2.5" fill="none"/>
+  <ellipse cx="112" cy="100" rx="8" ry="5" fill="white" opacity="0.15"/>
+  <text x="125" y="215" text-anchor="middle" fill="#555" font-size="16" font-family="sans-serif" font-weight="600">Tomato</text>
+</svg>

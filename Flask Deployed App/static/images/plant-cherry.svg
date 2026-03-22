@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect fill="#fff0f0" width="250" height="250" rx="16"/>
+  <path d="M110 70 Q120 40 130 35 Q140 40 140 70" stroke="#5d4037" stroke-width="2.5" fill="none"/>
+  <circle cx="105" cy="110" r="30" fill="#c0392b" opacity="0.85"/>
+  <circle cx="145" cy="110" r="30" fill="#e74c3c" opacity="0.85"/>
+  <ellipse cx="100" cy="100" rx="8" ry="5" fill="white" opacity="0.25"/>
+  <ellipse cx="140" cy="100" rx="8" ry="5" fill="white" opacity="0.25"/>
+  <path d="M130 38 Q140 45 135 55" fill="#4ECC5A" opacity="0.8"/>
+  <text x="125" y="215" text-anchor="middle" fill="#555" font-size="16" font-family="sans-serif" font-weight="600">Cherry</text>
+</svg>

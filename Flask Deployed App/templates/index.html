@@ -295,6 +295,78 @@ AI Engine
         transform: translateY(-3px);
     }
 
+    /* Toast notification */
+    .toast-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.95rem;
+        z-index: 10000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transform: translateX(120%);
+        transition: transform 0.4s ease;
+        max-width: 380px;
+    }
+
+    .toast-notification.show {
+        transform: translateX(0);
+    }
+
+    .toast-notification.toast-error {
+        background: linear-gradient(135deg, #ff4757, #c0392b);
+    }
+
+    .toast-notification.toast-success {
+        background: linear-gradient(135deg, #4ECC5A, #2d8f4e);
+    }
+
+    .toast-notification.toast-info {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+
+    .toast-notification.toast-warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay .spinner {
+        width: 60px;
+        height: 60px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #4ECC5A;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .loading-overlay .loading-text {
+        color: #fff;
+        margin-top: 18px;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
     .voice-feedback {
         margin-top: 15px;
         padding: 10px 20px;
@@ -331,6 +403,12 @@ AI Engine
         <h1 class="hero-title" data-translatable>AI Plant Disease Detection</h1>
         <p class="hero-subtitle" data-translatable>Upload a leaf image and let our AI diagnose plant diseases instantly</p>
     </div>
+
+    {% if error %}
+    <div class="alert alert-danger text-center fade-in" role="alert" style="max-width:600px;margin:0 auto 20px;">
+        <i class="fas fa-exclamation-triangle me-2"></i><span data-translatable>{{ error }}</span>
+    </div>
+    {% endif %}
 
     <!-- Upload Section -->
     <div class="row justify-content-center mb-5">
@@ -423,33 +501,99 @@ AI Engine
 </div>
 
 <script>
-    const actualBtn = document.getElementById('actual-btn');
-    const fileChosen = document.getElementById('file-chosen');
-    const dropArea = document.getElementById('drop-area');
-    const previewContainer = document.getElementById('preview-container');
-    const preview = document.getElementById('preview');
-    let capturedFile = null;
+    /* jshint browser:true */
+    /* All innerHTML assignments below use only hardcoded icon/text literals, not user input */
 
-    // File input change
+    var actualBtn = document.getElementById('actual-btn');
+    var fileChosen = document.getElementById('file-chosen');
+    var dropArea = document.getElementById('drop-area');
+    var previewContainer = document.getElementById('preview-container');
+    var preview = document.getElementById('preview');
+    var capturedFile = null;
+
+    // ==================== Toast notification ====================
+    function showToast(message, type) {
+        type = type || 'info';
+        var existing = document.querySelectorAll('.toast-notification');
+        existing.forEach(function(t) { t.remove(); });
+
+        var toast = document.createElement('div');
+        toast.className = 'toast-notification toast-' + type;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Trigger reflow then show
+        void toast.offsetWidth;
+        toast.classList.add('show');
+
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() { toast.remove(); }, 400);
+        }, 4000);
+    }
+
+    // ==================== Loading overlay ====================
+    function showLoading(message) {
+        message = message || 'Analyzing your plant...';
+        hideLoading();
+        var overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.id = 'loading-overlay';
+        var spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        var text = document.createElement('div');
+        text.className = 'loading-text';
+        text.textContent = message;
+        overlay.appendChild(spinner);
+        overlay.appendChild(text);
+        document.body.appendChild(overlay);
+    }
+
+    function hideLoading() {
+        var overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    // ==================== Status message helper ====================
+    function setStatus(iconClass, text) {
+        fileChosen.textContent = '';
+        var icon = document.createElement('i');
+        icon.className = iconClass + ' me-2';
+        fileChosen.appendChild(icon);
+        fileChosen.appendChild(document.createTextNode(text));
+    }
+
+    // ==================== File input change ====================
     actualBtn.addEventListener('change', function () {
         if (this.files[0]) {
-            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>${this.files[0].name}`;
+            setStatus('fas fa-check-circle', this.files[0].name);
             showPreview(this.files[0]);
         }
     });
 
     // Show preview
     function showPreview(file) {
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
             preview.src = e.target.result;
             previewContainer.style.display = 'block';
-        }
+        };
         reader.readAsDataURL(file);
     }
 
-    // Drag and drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    // ==================== Form submit loading state ====================
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+        var fileInput = document.getElementById('actual-btn');
+        if (!fileInput.files || !fileInput.files.length) {
+            e.preventDefault();
+            showToast('Please select or capture an image first.', 'warning');
+            return;
+        }
+        showLoading('Analyzing your plant...');
+    });
+
+    // ==================== Drag and drop ====================
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function(eventName) {
         dropArea.addEventListener(eventName, preventDefaults, false);
     });
 
@@ -458,24 +602,27 @@ AI Engine
         e.stopPropagation();
     }
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'));
+    ['dragenter', 'dragover'].forEach(function(eventName) {
+        dropArea.addEventListener(eventName, function() { dropArea.classList.add('dragover'); });
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'));
+    ['dragleave', 'drop'].forEach(function(eventName) {
+        dropArea.addEventListener(eventName, function() { dropArea.classList.remove('dragover'); });
     });
 
     dropArea.addEventListener('drop', function(e) {
-        const files = e.dataTransfer.files;
+        var files = e.dataTransfer.files;
         if (files.length) {
-            actualBtn.files = files;
-            fileChosen.innerHTML = `<i class="fas fa-check-circle me-2"></i>${files[0].name}`;
+            // Use DataTransfer API to properly assign dropped files to input
+            var dt = new DataTransfer();
+            dt.items.add(files[0]);
+            actualBtn.files = dt.files;
+            setStatus('fas fa-check-circle', files[0].name);
             showPreview(files[0]);
         }
     });
 
-    // Camera functionality
+    // ==================== Camera functionality ====================
     var cameraStream = null;
     var cameraReady = false;
 
@@ -486,7 +633,7 @@ AI Engine
         captureBtn.disabled = true;
         captureBtn.style.opacity = '0.5';
         cameraReady = false;
-        fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Opening camera...';
+        setStatus('fas fa-spinner fa-spin', 'Opening camera...');
         startCamera();
     });
 
@@ -496,40 +643,74 @@ AI Engine
 
         // Check if camera API is available
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera not supported. Use HTTPS or localhost.';
+            setStatus('fas fa-exclamation-triangle', 'Camera not supported. Use HTTPS or localhost.');
+            showToast('Camera API is not available. Please use HTTPS or localhost.', 'error');
             document.getElementById('camera-container').style.display = 'none';
             return;
         }
 
-        // Try multiple camera configurations as fallback chain
-        var constraints = [
-            { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
-            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
-            { video: true }
-        ];
-
+        // Improved fallback chain with separate try-catch for each constraint set
         var stream = null;
-        for (var i = 0; i < constraints.length; i++) {
+
+        // First try: rear camera with ideal HD resolution
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+        } catch (err1) {
+            console.warn('Camera attempt 1 (rear HD) failed:', err1.message);
+
+            // Second try: rear camera with no resolution constraint
             try {
-                stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
-                break;
-            } catch (err) {
-                console.warn('Camera constraint ' + i + ' failed:', err.message);
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+            } catch (err2) {
+                console.warn('Camera attempt 2 (rear basic) failed:', err2.message);
+
+                // Third try: any available camera
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: true
+                    });
+                } catch (err3) {
+                    console.warn('Camera attempt 3 (any camera) failed:', err3.message);
+                }
             }
         }
 
         if (!stream) {
-            fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera access denied. Please allow camera permission.';
+            setStatus('fas fa-exclamation-triangle', 'Camera access denied.');
             document.getElementById('camera-container').style.display = 'none';
+
+            // Detailed permission-denied guidance based on detected browser
+            var ua = navigator.userAgent.toLowerCase();
+            var helpMsg = 'Camera permission was denied. To enable it:\n\n';
+            if (ua.indexOf('chrome') > -1 && ua.indexOf('edg') === -1) {
+                helpMsg += '1. Click the lock/site-settings icon in the address bar.\n2. Set "Camera" to "Allow".\n3. Reload the page.';
+            } else if (ua.indexOf('firefox') > -1) {
+                helpMsg += '1. Click the lock icon in the address bar.\n2. Clear the blocked permission for Camera.\n3. Reload and allow when prompted.';
+            } else if (ua.indexOf('safari') > -1) {
+                helpMsg += '1. Go to Safari > Settings for This Website.\n2. Set Camera to "Allow".\n3. Reload the page.\n\nOn iOS: Settings > Safari > Camera > set to "Allow".';
+            } else if (ua.indexOf('edg') > -1) {
+                helpMsg += '1. Click the lock icon in the address bar.\n2. Set "Camera" to "Allow".\n3. Reload the page.';
+            } else {
+                helpMsg += '1. Check your browser\'s site permissions or address bar.\n2. Allow camera access for this site.\n3. Reload the page.';
+            }
+            showToast('Camera access denied. Check browser permissions and reload.', 'error');
+            alert(helpMsg);
             return;
         }
 
         cameraStream = stream;
         video.srcObject = stream;
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('autoplay', 'true');
+
+        // Mobile Safari compatibility: use empty string for boolean attributes
+        video.setAttribute('playsinline', '');
+        video.setAttribute('autoplay', '');
         video.muted = true;
 
+        // Explicitly play for iOS compatibility
         video.onloadedmetadata = function() {
             video.play().catch(function(e) { console.warn('Video play error:', e); });
         };
@@ -537,7 +718,7 @@ AI Engine
             cameraReady = true;
             captureBtn.disabled = false;
             captureBtn.style.opacity = '1';
-            fileChosen.innerHTML = '<i class="fas fa-camera me-2"></i>Camera ready - tap the red button to capture';
+            setStatus('fas fa-camera', 'Camera ready - tap the red button to capture');
         };
     }
 
@@ -547,12 +728,58 @@ AI Engine
             cameraStream = null;
         }
         cameraReady = false;
+        var video = document.getElementById('camera-feed');
+        if (video) video.srcObject = null;
         document.getElementById('camera-container').style.display = 'none';
     }
 
+    // Clean up camera stream when navigating away or closing the page
+    window.addEventListener('beforeunload', function() {
+        stopCamera();
+    });
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+            stopCamera();
+        }
+    });
+
+    // ==================== Upload helper ====================
+    function uploadBlob(blob) {
+        showLoading('Uploading and analyzing...');
+
+        var formData = new FormData();
+        formData.append('image', blob, 'captured_image.jpg');
+
+        fetch('/submit', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('Server error: ' + response.status);
+        })
+        .then(function(html) {
+            hideLoading();
+            // Replace page with server response (trusted same-origin content)
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            document.documentElement.replaceWith(doc.documentElement);
+        })
+        .catch(function(err) {
+            hideLoading();
+            console.error('Upload error:', err);
+            setStatus('fas fa-exclamation-triangle', 'Upload failed. Please try again.');
+            showToast('Upload failed: ' + err.message + '. Please try again.', 'error');
+        });
+    }
+
+    // ==================== Capture and upload ====================
     document.getElementById('capture-btn').addEventListener('click', function() {
         if (!cameraReady) {
-            fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Camera still loading...';
+            setStatus('fas fa-spinner fa-spin', 'Camera still loading...');
+            showToast('Camera is still initializing. Please wait a moment.', 'info');
             return;
         }
 
@@ -562,46 +789,44 @@ AI Engine
         canvas.height = video.videoHeight || 480;
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
         // Show preview
         preview.src = dataUrl;
         previewContainer.style.display = 'block';
-        fileChosen.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Photo captured - Analyzing...';
+        setStatus('fas fa-spinner fa-spin', 'Photo captured - Analyzing...');
 
         // Stop camera
         stopCamera();
 
-        // Use fetch + FormData for maximum browser compatibility
-        canvas.toBlob(function(blob) {
-            if (!blob) {
-                fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Capture failed. Please try again.';
-                return;
-            }
-
-            var formData = new FormData();
-            formData.append('image', blob, 'captured_image.jpg');
-
-            fetch('/submit', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(response) {
-                if (response.ok) {
-                    return response.text();
+        // toBlob with fallback for browsers that do not support it
+        if (canvas.toBlob) {
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    setStatus('fas fa-exclamation-triangle', 'Capture failed. Please try again.');
+                    showToast('Image capture failed. Please try again.', 'error');
+                    return;
                 }
-                throw new Error('Server error: ' + response.status);
-            })
-            .then(function(html) {
-                document.open();
-                document.write(html);
-                document.close();
-            })
-            .catch(function(err) {
-                console.error('Upload error:', err);
-                fileChosen.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Upload failed: ' + err.message;
-            });
-        }, 'image/jpeg', 0.9);
+                uploadBlob(blob);
+            }, 'image/jpeg', 0.85);
+        } else {
+            // Fallback: convert toDataURL to Blob manually
+            try {
+                var byteString = atob(dataUrl.split(',')[1]);
+                var mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                var blob = new Blob([ab], { type: mimeString });
+                uploadBlob(blob);
+            } catch (fallbackErr) {
+                console.error('toBlob fallback error:', fallbackErr);
+                setStatus('fas fa-exclamation-triangle', 'Capture failed. Please try again.');
+                showToast('Image processing failed. Please try uploading a file instead.', 'error');
+            }
+        }
     });
 </script>
 

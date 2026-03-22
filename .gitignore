@@ -3,7 +3,7 @@ venv/
 *.pyc
 *.db
 *.log
-*.pt
+# *.pt  # Model files now tracked via Git LFS
 .vscode/
 .DS_Store
 .env

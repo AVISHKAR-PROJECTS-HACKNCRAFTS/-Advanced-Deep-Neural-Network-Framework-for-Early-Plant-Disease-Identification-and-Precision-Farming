@@ -1,10 +1,21 @@
+# Web framework & server
 Flask>=2.3,<4
-gunicorn>=21
-numpy>=1.24
-pandas>=2.0
-Pillow>=10.0
+gunicorn>=21.2,<23
+
+# Image processing
+Pillow>=10.0,<11
+
+# Data handling
+pandas>=2.0,<3
+numpy>=1.24,<2
+
+# PyTorch (CPU-only; install with: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu)
 torch>=2.0
 torchvision>=0.15
-deep-translator>=1.11
-supabase>=2.3.0
-python-dotenv>=1.0.0
+
+# Translation
+deep-translator>=1.11,<2
+
+# Database & config
+supabase>=2.3.0,<3
+python-dotenv>=1.0,<2

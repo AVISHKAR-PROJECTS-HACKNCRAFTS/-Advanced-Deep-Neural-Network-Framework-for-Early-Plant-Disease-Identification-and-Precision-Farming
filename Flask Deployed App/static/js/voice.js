@@ -19,11 +19,43 @@
         pa: { speech: 'pa-IN',  name: 'Punjabi' }
     };
 
+    // ── Comprehensive language code mapping for TTS voice selection ──────
+    var LANG_MAP = {
+        'te': 'te-IN',  // Telugu
+        'hi': 'hi-IN',  // Hindi
+        'ta': 'ta-IN',  // Tamil
+        'kn': 'kn-IN',  // Kannada
+        'ml': 'ml-IN',  // Malayalam
+        'bn': 'bn-IN',  // Bengali
+        'mr': 'mr-IN',  // Marathi
+        'gu': 'gu-IN',  // Gujarati
+        'pa': 'pa-IN',  // Punjabi
+        'ur': 'ur-PK',  // Urdu
+        'en': 'en-US',  // English
+        'es': 'es-ES',  // Spanish
+        'fr': 'fr-FR',  // French
+        'de': 'de-DE',  // German
+        'zh': 'zh-CN',  // Chinese
+        'ja': 'ja-JP',  // Japanese
+        'ko': 'ko-KR',  // Korean
+        'ar': 'ar-SA',  // Arabic
+        'pt': 'pt-BR',  // Portuguese
+        'ru': 'ru-RU',  // Russian
+    };
+
     var currentLang = 'en';
     var isListening = false;
     var isSpeaking = false;
     var recognition = null;
     var synth = window.speechSynthesis;
+
+    // ── localStorage safety wrappers ─────────────────────────────────────
+    function safeGetItem(key) {
+        try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+    function safeSetItem(key, value) {
+        try { localStorage.setItem(key, value); } catch(e) { /* private browsing */ }
+    }
 
     // ── Speech Recognition (Input) ──────────────────────────────────────
 
@@ -198,6 +230,15 @@
             if (e.target === overlay) overlay.remove();
         });
 
+        // Escape key handler to close the voice results modal
+        function onEscapeKey(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                overlay.remove();
+                document.removeEventListener('keydown', onEscapeKey);
+            }
+        }
+        document.addEventListener('keydown', onEscapeKey);
+
         document.body.appendChild(overlay);
 
         // Auto-speak the first result
@@ -242,7 +283,7 @@
     // Global: toggle microphone
     window.toggleMic = function () {
         if (!SpeechRecognition) {
-            alert('Speech recognition is not supported in this browser. Please use Chrome.');
+            showToast('Speech recognition is not supported in this browser. Try Chrome or Edge.', 'warning');
             return;
         }
 
@@ -268,15 +309,75 @@
     // Chrome workaround: keep speech alive (Chrome pauses after ~15s)
     var resumeTimer = null;
 
+    // Cached voice references — updated when voices load asynchronously
+    var cachedVoices = [];
+
     // Ensure voices are loaded (Chrome loads them asynchronously)
     var voicesReady = false;
     function loadVoices() {
-        var v = synth.getVoices();
-        if (v.length > 0) voicesReady = true;
+        cachedVoices = synth.getVoices();
+        if (cachedVoices.length > 0) {
+            voicesReady = true;
+            console.log('[speech] Voices loaded:', cachedVoices.length, 'voices available');
+        }
     }
     loadVoices();
-    if (synth.onvoiceschanged !== undefined) {
-        synth.onvoiceschanged = loadVoices;
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function () {
+            // voices are now loaded, update any cached voice references
+            loadVoices();
+        };
+    }
+
+    // ── Voice Selection with comprehensive language mapping ──────────────
+
+    function findBestVoice(langCode) {
+        var voices = synth.getVoices();
+        if (voices.length === 0) voices = cachedVoices;
+
+        // Get the short code (e.g., 'te' from 'te-IN')
+        var shortCode = langCode.split('-')[0];
+        // Map to the normalized full locale via LANG_MAP
+        var normalized = LANG_MAP[shortCode] || langCode;
+
+        // 1. Exact match on the normalized locale (e.g., 'te-IN')
+        var voice = null;
+        for (var i = 0; i < voices.length; i++) {
+            var vLang = voices[i].lang.replace('_', '-'); // normalize hi_IN -> hi-IN
+            if (vLang === normalized) {
+                voice = voices[i];
+                break;
+            }
+        }
+        if (voice) return voice;
+
+        // 2. Prefix match (e.g., 'te' matches 'te-IN' or 'te-*')
+        for (var j = 0; j < voices.length; j++) {
+            var vLang2 = voices[j].lang.replace('_', '-');
+            if (vLang2.split('-')[0] === shortCode) {
+                voice = voices[j];
+                break;
+            }
+        }
+        if (voice) return voice;
+
+        // 3. Any voice containing the language code (fuzzy)
+        var lowerShort = shortCode.toLowerCase();
+        for (var k = 0; k < voices.length; k++) {
+            if (voices[k].lang.toLowerCase().indexOf(lowerShort) !== -1) {
+                voice = voices[k];
+                break;
+            }
+        }
+        if (voice) return voice;
+
+        // 4. Default to English, then first available
+        for (var m = 0; m < voices.length; m++) {
+            if (voices[m].lang.replace('_', '-').split('-')[0] === 'en') {
+                return voices[m];
+            }
+        }
+        return voices[0] || null;
     }
 
     function doSpeak(text) {
@@ -285,25 +386,12 @@
         utterance.lang = langCode;
         utterance.rate = 0.9;
 
-        // Try to pick a matching voice — use fuzzy matching for Windows compatibility
-        var voices = synth.getVoices();
-        var langPrefix = langCode.split('-')[0]; // e.g. 'hi' from 'hi-IN'
-        var bestVoice = null;
-
-        for (var i = 0; i < voices.length; i++) {
-            var vLang = voices[i].lang.replace('_', '-'); // normalize hi_IN -> hi-IN
-            if (vLang === langCode) {
-                bestVoice = voices[i];
-                break; // exact match, use it
-            }
-            if (!bestVoice && vLang.split('-')[0] === langPrefix) {
-                bestVoice = voices[i]; // prefix match, keep looking for exact
-            }
-        }
+        // Use the improved findBestVoice with LANG_MAP support
+        var bestVoice = findBestVoice(langCode);
 
         if (bestVoice) {
             utterance.voice = bestVoice;
-            console.log('[speech] Using voice:', bestVoice.name, bestVoice.lang);
+            console.log('[speech] Using voice:', bestVoice.name, bestVoice.lang, 'for lang:', langCode);
         } else {
             console.warn('[speech] No voice found for', langCode, '- browser will use default');
         }
@@ -315,12 +403,14 @@
 
         utterance.onend = function () {
             clearInterval(resumeTimer);
+            resumeTimer = null;
             isSpeaking = false;
             updateSpeakButton(false);
         };
 
         utterance.onerror = function () {
             clearInterval(resumeTimer);
+            resumeTimer = null;
             isSpeaking = false;
             updateSpeakButton(false);
         };
@@ -329,24 +419,28 @@
         isSpeaking = true;
         updateSpeakButton(true);
 
-        // Chrome bug fix: periodically call resume() to prevent freezing
+        // Chrome bug fix: periodically call pause/resume to prevent freezing
+        // Use 5-second interval (shorter is more reliable) and clear on end
         clearInterval(resumeTimer);
         resumeTimer = setInterval(function () {
             if (!synth.speaking) {
                 clearInterval(resumeTimer);
+                resumeTimer = null;
             } else {
                 synth.pause();
                 synth.resume();
             }
-        }, 10000);
+        }, 5000);
     }
 
     function speakText(text) {
         if (!text || !text.trim()) return;
 
-        // Cancel any current speech
+        // Cancel any current speech before starting new
         synth.cancel();
         clearInterval(resumeTimer);
+        resumeTimer = null;
+        isSpeaking = false;
 
         // Chrome fix: small delay after cancel() before speaking again
         setTimeout(function () {
@@ -358,6 +452,7 @@
         if (isSpeaking) {
             synth.cancel();
             clearInterval(resumeTimer);
+            resumeTimer = null;
             isSpeaking = false;
             updateSpeakButton(false);
             return;
@@ -422,20 +517,32 @@
     // ── Translation ─────────────────────────────────────────────────────
 
     // Show a small toast notification
-    function showToast(msg, duration) {
+    function showToast(msg, type, duration) {
         var existing = document.getElementById('translate-toast');
         if (existing) existing.remove();
         var toast = document.createElement('div');
         toast.id = 'translate-toast';
         toast.textContent = msg;
-        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a5c2e;color:#fff;padding:10px 24px;border-radius:50px;font-size:0.9rem;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;';
-        document.body.appendChild(toast);
-        if (duration) {
-            setTimeout(function () {
-                toast.style.opacity = '0';
-                setTimeout(function () { toast.remove(); }, 300);
-            }, duration);
+
+        // Pick background color based on type
+        var bgColor = '#1a5c2e'; // default green
+        if (type === 'warning') {
+            bgColor = '#e67e22';
+        } else if (type === 'error') {
+            bgColor = '#c0392b';
+        } else if (type === 'success') {
+            bgColor = '#1a5c2e';
         }
+
+        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:' + bgColor + ';color:#fff;padding:10px 24px;border-radius:50px;font-size:0.9rem;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;';
+        document.body.appendChild(toast);
+
+        var autoDuration = duration || (type === 'warning' || type === 'error' ? 4000 : 2500);
+        setTimeout(function () {
+            toast.style.opacity = '0';
+            setTimeout(function () { toast.remove(); }, 300);
+        }, autoDuration);
+
         return toast;
     }
 
@@ -503,19 +610,23 @@
             });
         }
 
+        // Track failures for feedback
+        var hadFailure = false;
+
         // Process chunks sequentially with small delays
         var chunkIndex = 0;
         function processNext() {
             if (chunkIndex >= chunks.length) {
                 // All done
                 console.log('[translate] All', elementsToUpdate.length, 'elements translated');
-                if (toast) {
-                    toast.textContent = 'Translated to ' + langName + '!';
-                    setTimeout(function () {
-                        toast.style.opacity = '0';
-                        setTimeout(function () { toast.remove(); }, 300);
-                    }, 1500);
+                if (toast) toast.remove();
+
+                if (hadFailure) {
+                    showToast('Translation failed, showing original text', 'error');
+                } else {
+                    showToast('Translated to ' + langName, 'success');
                 }
+
                 if (selector) { selector.style.opacity = '1'; selector.disabled = false; }
                 return;
             }
@@ -537,6 +648,7 @@
                 })
                 .catch(function (err) {
                     console.error('[translate] Chunk failed:', err);
+                    hadFailure = true;
                     chunkIndex++;
                     setTimeout(processNext, 500);
                 });
@@ -550,8 +662,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         var selector = document.getElementById('language-selector');
         if (selector) {
-            // Restore saved language from localStorage
-            var savedLang = localStorage.getItem('selectedLanguage');
+            // Restore saved language from localStorage (safe access)
+            var savedLang = safeGetItem('selectedLanguage');
             if (savedLang && savedLang !== 'en' && LANGUAGES[savedLang]) {
                 selector.value = savedLang;
                 // Delay translation slightly to let the page fully render
@@ -562,7 +674,7 @@
 
             selector.addEventListener('change', function () {
                 var lang = this.value;
-                localStorage.setItem('selectedLanguage', lang);
+                safeSetItem('selectedLanguage', lang);
                 window.translatePage(lang);
             });
         }

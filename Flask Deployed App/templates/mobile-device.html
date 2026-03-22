@@ -1,0 +1,563 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Mobile - Plant Disease Detection
+{% endblock pagetitle %}
+
+{% block body %}
+<style>
+    .mobile-hero {
+        text-align: center;
+        padding: 30px 15px 20px;
+    }
+
+    .mobile-hero-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        margin-bottom: 6px;
+    }
+
+    .mobile-hero-subtitle {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 400;
+    }
+
+    .mobile-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+        padding: 30px 20px;
+        margin-bottom: 24px;
+    }
+
+    .camera-section {
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    .camera-trigger {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4ECC5A, #2d8f4e);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        cursor: pointer;
+        box-shadow: 0 12px 40px rgba(78, 204, 90, 0.45);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .camera-trigger::before {
+        content: '';
+        position: absolute;
+        width: 136px;
+        height: 136px;
+        border-radius: 50%;
+        border: 3px solid rgba(78, 204, 90, 0.35);
+        animation: pulse-ring 2s ease-out infinite;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.3);
+            opacity: 0;
+        }
+    }
+
+    .camera-trigger i {
+        font-size: 48px;
+        color: #fff;
+    }
+
+    .camera-trigger:hover {
+        transform: scale(1.08);
+        box-shadow: 0 16px 50px rgba(78, 204, 90, 0.55);
+    }
+
+    .camera-trigger:active {
+        transform: scale(0.96);
+    }
+
+    .camera-label {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #1a5c2e;
+        margin-bottom: 4px;
+    }
+
+    .camera-hint {
+        font-size: 0.85rem;
+        color: #777;
+    }
+
+    .or-divider {
+        display: flex;
+        align-items: center;
+        margin: 28px 0;
+        gap: 12px;
+    }
+
+    .or-divider hr {
+        flex: 1;
+        border: none;
+        border-top: 1px solid #ddd;
+    }
+
+    .or-divider span {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+    }
+
+    .btn-file-upload {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px 20px;
+        background: transparent;
+        border: 2px solid #4ECC5A;
+        color: #4ECC5A;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .btn-file-upload:hover,
+    .btn-file-upload:active {
+        background: #4ECC5A;
+        color: #fff;
+    }
+
+    .file-status {
+        margin-top: 16px;
+        padding: 10px 16px;
+        background: rgba(78, 204, 90, 0.1);
+        border-radius: 30px;
+        color: #1a5c2e;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .mobile-preview {
+        margin-top: 20px;
+        display: none;
+        text-align: center;
+    }
+
+    .mobile-preview img {
+        max-width: 100%;
+        max-height: 240px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        object-fit: cover;
+    }
+
+    .mobile-camera-view {
+        display: none;
+        margin-top: 20px;
+        background: #000;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .mobile-camera-view video {
+        width: 100%;
+        border-radius: 16px;
+    }
+
+    .btn-shutter {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff4757;
+        color: #fff;
+        border: 4px solid rgba(255, 255, 255, 0.8);
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 5px 20px rgba(255, 71, 87, 0.5);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-shutter:active {
+        transform: translateX(-50%) scale(0.9);
+    }
+
+    .btn-mobile-submit {
+        display: block;
+        width: 100%;
+        background: linear-gradient(135deg, #4ECC5A, #1a5c2e);
+        color: #fff;
+        border: none;
+        padding: 16px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 24px;
+        box-shadow: 0 12px 35px rgba(78, 204, 90, 0.4);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .btn-mobile-submit:hover,
+    .btn-mobile-submit:active {
+        box-shadow: 0 16px 45px rgba(78, 204, 90, 0.55);
+    }
+
+    .btn-mobile-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .instructions {
+        margin-top: 24px;
+        padding: 20px;
+        background: rgba(78, 204, 90, 0.08);
+        border-radius: 16px;
+        border-left: 4px solid #4ECC5A;
+    }
+
+    .instructions h6 {
+        font-weight: 700;
+        color: #1a5c2e;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .instructions ol {
+        padding-left: 18px;
+        margin: 0;
+    }
+
+    .instructions ol li {
+        color: #555;
+        font-size: 0.88rem;
+        line-height: 1.7;
+        margin-bottom: 4px;
+    }
+
+    .mobile-loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .mobile-loading-overlay .spinner {
+        width: 56px;
+        height: 56px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #4ECC5A;
+        border-radius: 50%;
+        animation: mobileSpin 0.8s linear infinite;
+    }
+
+    .mobile-loading-overlay .loading-text {
+        color: #fff;
+        margin-top: 16px;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    @keyframes mobileSpin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="container">
+    <!-- Hero -->
+    <div class="mobile-hero fade-in">
+        <h1 class="mobile-hero-title" data-translatable>Plant Disease Detection</h1>
+        <p class="mobile-hero-subtitle" data-translatable>Snap a photo of a leaf to get an instant diagnosis</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+            <div class="mobile-card fade-in">
+                <form action="/submit" method="POST" enctype="multipart/form-data" id="mobile-upload-form">
+                    <!-- Camera Section -->
+                    <div class="camera-section">
+                        <button type="button" id="camera-trigger-btn" class="camera-trigger" aria-label="Open camera">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <p class="camera-label" data-translatable>Tap to capture leaf photo</p>
+                        <p class="camera-hint" data-translatable>Use your rear camera for best results</p>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="or-divider">
+                        <hr>
+                        <span data-translatable>or</span>
+                        <hr>
+                    </div>
+
+                    <!-- File Upload -->
+                    <label for="mobile-file-input" class="btn-file-upload">
+                        <i class="fas fa-folder-open"></i>
+                        <span data-translatable>Choose from gallery</span>
+                    </label>
+                    <input type="file" id="mobile-file-input" hidden name="image" accept="image/*" />
+
+                    <!-- Status -->
+                    <div class="file-status" id="mobile-file-status">
+                        <i class="fas fa-image me-2"></i><span data-translatable>No image selected</span>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="mobile-preview" id="mobile-preview-container">
+                        <img id="mobile-preview-img" src="#" alt="Preview" />
+                    </div>
+
+                    <!-- Camera Live View -->
+                    <div class="mobile-camera-view" id="mobile-camera-view">
+                        <video id="mobile-camera-feed" autoplay playsinline muted></video>
+                        <button type="button" id="mobile-shutter-btn" class="btn-shutter" aria-label="Capture photo">
+                            <i class="fas fa-circle"></i>
+                        </button>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" id="mobile-submit-btn" class="btn-mobile-submit" disabled>
+                        <i class="fas fa-search me-2"></i><span data-translatable>Analyze Plant</span>
+                    </button>
+                </form>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <h6 data-translatable><i class="fas fa-info-circle me-2"></i>How to get the best results</h6>
+                    <ol>
+                        <li data-translatable>Focus on a single leaf that shows symptoms</li>
+                        <li data-translatable>Ensure good lighting -- avoid shadows</li>
+                        <li data-translatable>Capture the full leaf in the frame</li>
+                        <li data-translatable>Hold your phone steady while taking the photo</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var fileInput = document.getElementById('mobile-file-input');
+        var fileStatus = document.getElementById('mobile-file-status');
+        var previewContainer = document.getElementById('mobile-preview-container');
+        var previewImg = document.getElementById('mobile-preview-img');
+        var submitBtn = document.getElementById('mobile-submit-btn');
+        var cameraStream = null;
+        var cameraReady = false;
+
+        function setStatus(iconClass, text) {
+            fileStatus.textContent = '';
+            var icon = document.createElement('i');
+            icon.className = iconClass + ' me-2';
+            fileStatus.appendChild(icon);
+            fileStatus.appendChild(document.createTextNode(text));
+        }
+
+        function showPreview(file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showLoadingOverlay() {
+            var overlay = document.createElement('div');
+            overlay.className = 'mobile-loading-overlay';
+            overlay.id = 'mobile-overlay';
+
+            var spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            overlay.appendChild(spinner);
+
+            var text = document.createElement('div');
+            text.className = 'loading-text';
+            text.setAttribute('data-translatable', '');
+            text.textContent = 'Analyzing your plant...';
+            overlay.appendChild(text);
+
+            document.body.appendChild(overlay);
+            return overlay;
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(function(track) { track.stop(); });
+                cameraStream = null;
+            }
+            cameraReady = false;
+            document.getElementById('mobile-camera-view').style.display = 'none';
+        }
+
+        async function startCamera() {
+            var video = document.getElementById('mobile-camera-feed');
+            var shutterBtn = document.getElementById('mobile-shutter-btn');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                setStatus('fas fa-exclamation-triangle', 'Camera not supported. Use HTTPS or localhost.');
+                document.getElementById('mobile-camera-view').style.display = 'none';
+                return;
+            }
+
+            var constraints = [
+                { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
+                { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
+                { video: true }
+            ];
+
+            var stream = null;
+            for (var i = 0; i < constraints.length; i++) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints[i]);
+                    break;
+                } catch (err) {
+                    console.warn('Camera constraint ' + i + ' failed:', err.message);
+                }
+            }
+
+            if (!stream) {
+                setStatus('fas fa-exclamation-triangle', 'Camera access denied. Please allow permission.');
+                document.getElementById('mobile-camera-view').style.display = 'none';
+                return;
+            }
+
+            cameraStream = stream;
+            video.srcObject = stream;
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('autoplay', 'true');
+            video.muted = true;
+
+            video.onloadedmetadata = function() {
+                video.play().catch(function(e) { console.warn('Video play error:', e); });
+            };
+            video.onplaying = function() {
+                cameraReady = true;
+                shutterBtn.disabled = false;
+                shutterBtn.style.opacity = '1';
+                setStatus('fas fa-camera', 'Camera ready -- tap the red button to capture');
+            };
+        }
+
+        // File selection
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                setStatus('fas fa-check-circle', this.files[0].name);
+                showPreview(this.files[0]);
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Camera trigger
+        document.getElementById('camera-trigger-btn').addEventListener('click', function() {
+            var cameraView = document.getElementById('mobile-camera-view');
+            var shutterBtn = document.getElementById('mobile-shutter-btn');
+            cameraView.style.display = 'block';
+            shutterBtn.disabled = true;
+            shutterBtn.style.opacity = '0.5';
+            cameraReady = false;
+            setStatus('fas fa-spinner fa-spin', 'Opening camera...');
+            startCamera();
+        });
+
+        // Capture photo
+        document.getElementById('mobile-shutter-btn').addEventListener('click', function() {
+            if (!cameraReady) {
+                setStatus('fas fa-spinner fa-spin', 'Camera still loading...');
+                return;
+            }
+
+            var video = document.getElementById('mobile-camera-feed');
+            var canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+            previewImg.src = dataUrl;
+            previewContainer.style.display = 'block';
+            setStatus('fas fa-spinner fa-spin', 'Photo captured -- Analyzing...');
+
+            stopCamera();
+
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    setStatus('fas fa-exclamation-triangle', 'Capture failed. Please try again.');
+                    return;
+                }
+
+                var overlay = showLoadingOverlay();
+
+                var formData = new FormData();
+                formData.append('image', blob, 'captured_image.jpg');
+
+                fetch('/submit', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Server error: ' + response.status);
+                })
+                .then(function(html) {
+                    document.documentElement.innerHTML = html;
+                })
+                .catch(function(err) {
+                    console.error('Upload error:', err);
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    setStatus('fas fa-exclamation-triangle', 'Upload failed: ' + err.message);
+                });
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Form submit handler
+        document.getElementById('mobile-upload-form').addEventListener('submit', function(e) {
+            if (!fileInput.files || !fileInput.files[0]) {
+                e.preventDefault();
+                setStatus('fas fa-exclamation-triangle', 'Please select or capture an image first.');
+                return;
+            }
+            showLoadingOverlay();
+        });
+    })();
+</script>
+
+{% endblock body %}

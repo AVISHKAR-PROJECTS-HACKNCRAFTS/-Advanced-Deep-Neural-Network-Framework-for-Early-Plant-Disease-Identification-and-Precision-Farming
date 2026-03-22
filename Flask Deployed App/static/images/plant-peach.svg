@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect fill="#fff5ee" width="250" height="250" rx="16"/>
+  <path d="M125 65 Q90 70 80 110 Q70 155 100 175 Q115 185 125 180 Q135 185 150 175 Q180 155 170 110 Q160 70 125 65Z" fill="#f0a070" opacity="0.85"/>
+  <path d="M125 65 L125 180" stroke="#e08050" stroke-width="1.5" opacity="0.4"/>
+  <path d="M125 65 Q130 45 140 40" stroke="#5d4037" stroke-width="2.5" fill="none"/>
+  <path d="M135 43 Q148 50 142 60" fill="#4ECC5A" opacity="0.8"/>
+  <ellipse cx="110" cy="100" rx="10" ry="6" fill="#f5c0a0" opacity="0.4"/>
+  <text x="125" y="215" text-anchor="middle" fill="#555" font-size="16" font-family="sans-serif" font-weight="600">Peach</text>
+</svg>

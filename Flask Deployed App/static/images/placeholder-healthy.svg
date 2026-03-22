@@ -1,10 +1,101 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <rect fill="#f0fff0" width="200" height="200" rx="16"/>
-  <ellipse cx="100" cy="80" rx="50" ry="40" fill="#c0e8c0" opacity="0.7"/>
-  <path d="M100 45 Q75 65 80 90 Q85 115 100 105 Q115 115 120 90 Q125 65 100 45Z" fill="#4ECC5A" opacity="0.8"/>
-  <path d="M100 105 L100 145" stroke="#2d8f4e" stroke-width="3"/>
-  <path d="M100 120 L85 110" stroke="#2d8f4e" stroke-width="2" opacity="0.5"/>
-  <path d="M100 130 L115 120" stroke="#2d8f4e" stroke-width="2" opacity="0.5"/>
-  <text x="100" y="170" text-anchor="middle" fill="#555" font-size="13" font-family="sans-serif" font-weight="600">Healthy Plant</text>
-  <text x="100" y="188" text-anchor="middle" fill="#888" font-size="10" font-family="sans-serif">Reference Image</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <linearGradient id="bgGradH" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#eef9ee;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#daf0da;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="leafGradH" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5ed45e;stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#4ECC5A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#38b545;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="leafHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="stemGradH" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#38a342;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2a7a30;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadowH" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect fill="url(#bgGradH)" width="300" height="300" rx="20"/>
+  <rect fill="none" stroke="#a8d8a8" stroke-width="1.5" width="296" height="296" x="2" y="2" rx="18" opacity="0.5"/>
+
+  <!-- Subtle radial glow behind leaf -->
+  <circle cx="150" cy="120" r="90" fill="#4ECC5A" opacity="0.08"/>
+
+  <!-- Leaf body -->
+  <g filter="url(#shadowH)">
+    <!-- Main leaf shape -->
+    <path d="
+      M150 35
+      C115 48, 82 72, 72 105
+      C62 138, 68 165, 85 185
+      C98 200, 118 205, 150 200
+      C182 205, 202 200, 215 185
+      C232 165, 238 138, 228 105
+      C218 72, 185 48, 150 35
+      Z"
+      fill="url(#leafGradH)" stroke="#2d9435" stroke-width="1.2"/>
+
+    <!-- Light highlight on leaf -->
+    <path d="
+      M150 40
+      C125 50, 100 70, 90 95
+      C85 110, 90 120, 100 115
+      C115 105, 135 65, 150 40
+      Z"
+      fill="url(#leafHighlight)"/>
+
+    <!-- Center vein -->
+    <path d="M150 45 L150 195" stroke="#2a8535" stroke-width="2.5" fill="none" opacity="0.45"/>
+
+    <!-- Left veins -->
+    <path d="M150 70 Q128 78, 90 98" stroke="#2a8535" stroke-width="1.8" fill="none" opacity="0.3"/>
+    <path d="M150 100 Q125 108, 82 128" stroke="#2a8535" stroke-width="1.8" fill="none" opacity="0.3"/>
+    <path d="M150 130 Q128 138, 88 155" stroke="#2a8535" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path d="M150 160 Q130 168, 100 178" stroke="#2a8535" stroke-width="1.2" fill="none" opacity="0.2"/>
+
+    <!-- Right veins -->
+    <path d="M150 70 Q172 78, 210 98" stroke="#2a8535" stroke-width="1.8" fill="none" opacity="0.3"/>
+    <path d="M150 100 Q175 108, 218 128" stroke="#2a8535" stroke-width="1.8" fill="none" opacity="0.3"/>
+    <path d="M150 130 Q172 138, 212 155" stroke="#2a8535" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path d="M150 160 Q170 168, 200 178" stroke="#2a8535" stroke-width="1.2" fill="none" opacity="0.2"/>
+
+    <!-- Secondary veins for realism -->
+    <path d="M125 82 Q115 88, 100 105" stroke="#2a8535" stroke-width="0.8" fill="none" opacity="0.2"/>
+    <path d="M175 82 Q185 88, 200 105" stroke="#2a8535" stroke-width="0.8" fill="none" opacity="0.2"/>
+    <path d="M120 115 Q110 122, 92 140" stroke="#2a8535" stroke-width="0.8" fill="none" opacity="0.18"/>
+    <path d="M180 115 Q190 122, 208 140" stroke="#2a8535" stroke-width="0.8" fill="none" opacity="0.18"/>
+  </g>
+
+  <!-- Stem -->
+  <path d="M150 195 C147 208, 142 218, 135 228" stroke="url(#stemGradH)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Small secondary leaf on stem -->
+  <path d="M140 215 C132 208, 122 210, 118 218 C115 225, 125 222, 140 215 Z" fill="#48bf52" opacity="0.6"/>
+
+  <!-- Checkmark icon -->
+  <g transform="translate(240, 30)">
+    <circle cx="0" cy="0" r="18" fill="#38b545" opacity="0.9"/>
+    <path d="M-8 0 L-3 6 L9 -6" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Label text -->
+  <rect x="30" y="242" width="240" height="48" rx="10" fill="#fff" opacity="0.85"/>
+  <rect x="30" y="242" width="240" height="48" rx="10" fill="none" stroke="#8cc88c" stroke-width="1" opacity="0.5"/>
+  <text x="150" y="262" text-anchor="middle" fill="#1e6b24" font-size="16" font-family="'Segoe UI', Arial, sans-serif" font-weight="700">Healthy Plant</text>
+  <text x="150" y="280" text-anchor="middle" fill="#5a9a5e" font-size="11" font-family="'Segoe UI', Arial, sans-serif">No disease detected</text>
 </svg>

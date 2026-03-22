@@ -371,7 +371,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
             <span data-translatable>{{title}}</span>
         </h1>
         {% if is_healthy %}
-        <span class="result-badge badge-healthy">
+        <span class="result-badge badge-healthy" data-translatable>
             <i class="fas fa-check-circle me-2"></i>Healthy Plant
         </span>
         <div class="status-indicator">
@@ -379,7 +379,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
             <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;" data-translatable>No disease detected</span>
         </div>
         {% else %}
-        <span class="result-badge badge-disease">
+        <span class="result-badge badge-disease" data-translatable>
             <i class="fas fa-exclamation-triangle me-2"></i>Disease Detected
         </span>
         <div class="status-indicator">
@@ -407,7 +407,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
                         <div class="confidence-fill confidence-{{confidence_color}}"
                              style="width: {{confidence}}%"></div>
                     </div>
-                    <span class="confidence-value confidence-text-{{confidence_color}}">
+                    <span class="confidence-value confidence-text-{{confidence_color}}" data-translatable>
                         {{confidence}}% Confidence
                     </span>
                 </div>
@@ -426,7 +426,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
                         <div class="alt-item">
                             <span class="alt-name" data-translatable>{{alt.name}}</span>
                             <span class="alt-confidence">{{alt.confidence}}%</span>
-                            <span class="severity-badge severity-{{alt.severity|lower}}">
+                            <span class="severity-badge severity-{{alt.severity|lower}}" data-translatable>
                                 {{alt.severity}}
                             </span>
                         </div>
@@ -438,17 +438,45 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
         </div>
     </div>
 
+    <!-- Low Confidence Warning -->
+    {% if confidence < 50 %}
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="alert alert-warning d-flex align-items-center fade-in" role="alert"
+                 style="border-radius: 16px; border: none; background: #fff3e0; box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+                <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: #ef6c00;"></i>
+                <div data-translatable>
+                    Low confidence prediction. Results may not be accurate. Try uploading a clearer image.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Image Section -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-5 col-md-6">
             <div class="image-card fade-in">
-                <img src="{{image_url}}" alt="Analyzed Plant"
-                     onerror="this.onerror=null;this.style.padding='40px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22200%22 viewBox=%220 0 280 200%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22280%22 height=%22200%22 rx=%2216%22/%3E%3Ctext x=%22140%22 y=%2290%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8D%83%3C/text%3E%3Ctext x=%22140%22 y=%22130%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2214%22 font-family=%22sans-serif%22%3EReference image unavailable%3C/text%3E%3C/svg%3E';">
-                <p class="image-label">
-                    <i class="fas fa-leaf me-2"></i>Uploaded Image
+                <img src="{{uploaded_image_url}}" alt="Your uploaded plant leaf image"
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/placeholder-disease.svg') }}';"
+                     style="width:100%;border-radius:16px;object-fit:cover;">
+                <p class="image-label" data-translatable>
+                    <i class="fas fa-camera me-2"></i>Your Uploaded Image
                 </p>
             </div>
         </div>
+        {% if image_url and not is_healthy %}
+        <div class="col-lg-5 col-md-6">
+            <div class="image-card fade-in">
+                <img src="{{image_url}}" alt="Reference image for {{title}}"
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/placeholder-disease.svg') }}';"
+                     style="width:100%;border-radius:16px;object-fit:cover;">
+                <p class="image-label" data-translatable>
+                    <i class="fas fa-book-medical me-2"></i>Disease Reference
+                </p>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Info Cards Row -->
@@ -522,7 +550,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
                     </h5>
                 </div>
                 <img src="{{simage}}" alt="{{sname}}" class="supplement-image"
-                     onerror="this.onerror=null;this.style.padding='40px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22200%22 height=%22200%22 rx=%2216%22/%3E%3Ctext x=%22100%22 y=%2290%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x=%22100%22 y=%22130%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2214%22 font-family=%22sans-serif%22%3EImage unavailable%3C/text%3E%3C/svg%3E';">
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/placeholder-disease.svg') }}';">
                 <p class="supplement-name" data-translatable>{{sname}}</p>
             </div>
         </div>
@@ -532,7 +560,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
     <!-- Report to Community Button (only for diseases) -->
     {% if not is_healthy and pred != 4 %}
     <div class="text-center mt-3 mb-3 fade-in">
-        <button id="report-alert-btn" class="btn-report" onclick="reportAlert()">
+        <button id="report-alert-btn" class="btn-report" onclick="reportAlert()" data-translatable>
             <i class="fas fa-bell me-2"></i>Report to Community
         </button>
         <p class="text-white mt-2" style="font-size: 0.85rem; opacity: 0.8;" data-translatable>
@@ -543,7 +571,7 @@ Disease detected: {{title}}. Severity: {{severity}}. Confidence: {{confidence}} 
 
     <!-- Back Button -->
     <div class="text-center fade-in">
-        <a href="/index" class="btn-back">
+        <a href="{{ url_for('ai_engine_page') }}" class="btn-back">
             <i class="fas fa-arrow-left"></i>
             <span data-translatable>Analyze Another Plant</span>
         </a>
@@ -569,7 +597,7 @@ function reportAlert() {
             function(error) {
                 sendAlert(null, null);
             },
-            { timeout: 10000 }
+            { timeout: 20000, enableHighAccuracy: false, maximumAge: 300000 }
         );
     } else {
         sendAlert(null, null);

@@ -1,6 +1,8 @@
 import os
 import sqlite3
-from flask import Flask, redirect, render_template, request, jsonify
+import time
+import logging
+from flask import Flask, redirect, render_template, request, jsonify, make_response
 from PIL import Image
 import torchvision.transforms.functional as TF
 import CNN
@@ -11,17 +13,46 @@ import pandas as pd
 from deep_translator import GoogleTranslator
 from supabase_client import get_supabase
 
+# ── Logging ───────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+)
+logger = logging.getLogger(__name__)
 
-disease_info = pd.read_csv('disease_info.csv' , encoding='cp1252')
-supplement_info = pd.read_csv('supplement_info.csv',encoding='cp1252')
+# ── CSV Loading ───────────────────────────────────────────────────────────
+try:
+    disease_info = pd.read_csv('disease_info.csv', encoding='cp1252')
+    supplement_info = pd.read_csv('supplement_info.csv', encoding='cp1252')
+    logger.info("CSV data files loaded successfully.")
+except FileNotFoundError as e:
+    logger.error(f"CSV data file not found: {e}. The app will not function correctly.")
+    disease_info = pd.DataFrame()
+    supplement_info = pd.DataFrame()
+except Exception as e:
+    logger.error(f"Error loading CSV data files: {e}. The app will not function correctly.")
+    disease_info = pd.DataFrame()
+    supplement_info = pd.DataFrame()
 
+# ── Model Loading ─────────────────────────────────────────────────────────
 model = CNN.CNN(39)
-model.load_state_dict(torch.load("plant_disease_model_1_latest.pt", map_location=torch.device('cpu'), weights_only=True))
-model.eval()
+try:
+    model.load_state_dict(torch.load("plant_disease_model_1_latest.pt", map_location=torch.device('cpu'), weights_only=True))
+    model.eval()
+    logger.info("Model loaded successfully.")
+except FileNotFoundError:
+    logger.error("Model file 'plant_disease_model_1_latest.pt' not found. Predictions will be unavailable.")
+    model = None
+except Exception as e:
+    logger.error(f"Error loading model: {e}. Predictions will be unavailable.")
+    model = None
 
 # ── Constants ──────────────────────────────────────────────────────────────
 
 HEALTHY_INDICES = {3, 5, 7, 11, 15, 18, 20, 23, 24, 25, 28, 38}
+
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 SEVERITY_MAP = {
     0: 'Moderate',    # Apple Scab
@@ -65,9 +96,42 @@ SEVERITY_MAP = {
     38: 'Healthy',    # Tomato Healthy
 }
 
+# ── Rate Limiting ─────────────────────────────────────────────────────────
+
+# Simple in-memory rate limiter: { ip_string: [timestamp, timestamp, ...] }
+_rate_limit_store = {}
+RATE_LIMIT_MAX_REQUESTS = 30
+RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+def _is_rate_limited(ip):
+    """Return True if ip has exceeded RATE_LIMIT_MAX_REQUESTS in the last window."""
+    now = time.time()
+    cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+
+    if ip not in _rate_limit_store:
+        _rate_limit_store[ip] = []
+
+    # Prune old entries
+    _rate_limit_store[ip] = [t for t in _rate_limit_store[ip] if t > cutoff]
+
+    if len(_rate_limit_store[ip]) >= RATE_LIMIT_MAX_REQUESTS:
+        return True
+
+    _rate_limit_store[ip].append(now)
+    return False
+
+
 # ── Translation ────────────────────────────────────────────────────────────
 
 translation_cache = {}
+
+# ── Helper: file extension check ──────────────────────────────────────────
+
+def _allowed_file(filename):
+    """Return True if the filename has an allowed image extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # ── Prediction ─────────────────────────────────────────────────────────────
 
@@ -157,19 +221,58 @@ def submit():
     if request.method != 'POST':
         return redirect('/')
 
+    # Check if model is available
+    if model is None:
+        logger.error("Prediction requested but model is not loaded.")
+        return render_template('index.html', error="Model is not available. Please contact the administrator."), 503
+
     image = request.files.get('image')
     if not image or not image.filename:
-        return redirect('/')
+        return render_template('index.html', error="Please select an image to upload.")
 
     filename = image.filename
+
+    # Validate file extension
+    if not _allowed_file(filename):
+        logger.warning(f"Upload rejected: disallowed extension for '{filename}'")
+        return render_template('index.html', error="Invalid file type. Please upload a JPG, PNG, or WEBP image.")
+
+    # Validate file size (read content length; seek back for saving)
+    image.seek(0, os.SEEK_END)
+    file_size = image.tell()
+    image.seek(0)
+    if file_size > MAX_FILE_SIZE:
+        logger.warning(f"Upload rejected: file too large ({file_size} bytes)")
+        return render_template('index.html', error="File is too large. Maximum size is 10MB.")
+
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     image.save(file_path)
+
+    # Validate that the file is a real image (not corrupt)
+    try:
+        with Image.open(file_path) as img:
+            img.verify()
+    except Exception as e:
+        logger.warning(f"Upload rejected: corrupt or invalid image file '{filename}': {e}")
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        return render_template('index.html', error="The uploaded file appears to be corrupt. Please try another image.")
 
     try:
         result = prediction(file_path)
     except Exception as e:
-        print(f"Prediction error: {e}")
-        return redirect('/')
+        logger.error(f"Prediction error: {e}")
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        return render_template('index.html', error="An error occurred during analysis. Please try again.")
+
+    # Keep uploaded file for display on results page
+    # (will be overwritten on next upload with same name)
+    uploaded_image_url = f"/static/uploads/{filename}"
 
     pred = result['index']
     confidence = result['confidence']
@@ -193,14 +296,21 @@ def submit():
 
     is_healthy = pred in HEALTHY_INDICES
 
-    return render_template('submit.html',
+    resp = make_response(render_template('submit.html',
         title=title, desc=description, prevent=prevent,
         image_url=image_url, pred=pred,
+        uploaded_image_url=uploaded_image_url,
         sname=supplement_name, simage=supplement_image_url,
         buy_link=supplement_buy_link,
         confidence=confidence, severity=severity,
         confidence_color=confidence_color,
-        alternatives=alternatives, is_healthy=is_healthy)
+        alternatives=alternatives, is_healthy=is_healthy))
+
+    # Add no-cache headers for prediction results
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 @app.route('/market', methods=['GET', 'POST'])
 def market():
@@ -218,6 +328,10 @@ def search_disease():
     q = request.args.get('q', '').lower().strip()
     if not q:
         return jsonify({'results': []})
+
+    # Max length check on query
+    if len(q) > 200:
+        q = q[:200]
 
     results = []
     for i in range(len(disease_info)):
@@ -241,6 +355,12 @@ def search_disease():
 
 @app.route('/api/translate', methods=['GET', 'POST'])
 def translate_text():
+    # Rate limiting
+    client_ip = request.remote_addr or 'unknown'
+    if _is_rate_limited(client_ip):
+        logger.warning(f"Rate limit exceeded for /api/translate from IP {client_ip}")
+        return jsonify({'error': 'Rate limit exceeded. Try again later.'}), 429
+
     if request.method == 'POST':
         data = request.get_json(silent=True) or {}
         text = data.get('text', '')
@@ -261,7 +381,7 @@ def translate_text():
         translation_cache[cache_key] = translated
         return jsonify({'translated': translated})
     except Exception as e:
-        print(f"Translation error: {e}")
+        logger.error(f"Translation error for text '{text[:80]}...' to '{dest}': {e}")
         return jsonify({'translated': text, 'error': str(e)})
 
 @app.route('/api/translate-batch', methods=['POST'])
@@ -295,7 +415,7 @@ def translate_batch():
             results.append(translated)
             _time.sleep(0.1)  # small delay between requests
         except Exception as e:
-            print(f"Batch translation error: {e}")
+            logger.error(f"Batch translation error for text '{text[:80]}...' to '{dest}': {e}")
             results.append(text)
             _time.sleep(0.5)
 
@@ -344,20 +464,56 @@ def get_alerts():
 
 @app.route('/api/report-alert', methods=['POST'])
 def report_alert():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     required_fields = ['disease_name', 'disease_index', 'severity', 'confidence']
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Missing field: {field}'}), 400
 
+    # Validate disease_index
+    try:
+        disease_index = int(data['disease_index'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'disease_index must be an integer'}), 400
+    if disease_index < 0 or disease_index > 38:
+        return jsonify({'error': 'disease_index must be between 0 and 38'}), 400
+
+    # Validate confidence
+    try:
+        confidence = float(data['confidence'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'confidence must be a number'}), 400
+    if confidence < 0 or confidence > 100:
+        return jsonify({'error': 'confidence must be between 0 and 100'}), 400
+
+    # Validate latitude if provided
+    latitude = data.get('latitude')
+    if latitude is not None:
+        try:
+            latitude = float(latitude)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'latitude must be a number'}), 400
+        if latitude < -90 or latitude > 90:
+            return jsonify({'error': 'latitude must be between -90 and 90'}), 400
+
+    # Validate longitude if provided
+    longitude = data.get('longitude')
+    if longitude is not None:
+        try:
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'longitude must be a number'}), 400
+        if longitude < -180 or longitude > 180:
+            return jsonify({'error': 'longitude must be between -180 and 180'}), 400
+
     alert = {
         'disease_name': data['disease_name'],
-        'disease_index': int(data['disease_index']),
+        'disease_index': disease_index,
         'severity': data['severity'],
-        'confidence': float(data['confidence']),
-        'latitude': data.get('latitude'),
-        'longitude': data.get('longitude'),
+        'confidence': confidence,
+        'latitude': latitude,
+        'longitude': longitude,
         'region_name': data.get('region_name', 'Unknown'),
         'image_url': data.get('image_url', ''),
         'description': data.get('description', ''),
@@ -395,7 +551,7 @@ def report_alert():
 
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe_alerts():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     email = data.get('email', '').strip()
     region = data.get('region_name', '').strip()
 

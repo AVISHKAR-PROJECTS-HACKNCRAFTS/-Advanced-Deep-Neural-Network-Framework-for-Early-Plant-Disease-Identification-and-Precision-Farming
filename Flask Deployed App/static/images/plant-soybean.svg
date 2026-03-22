@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect fill="#f5fff0" width="250" height="250" rx="16"/>
+  <path d="M90 90 Q85 80 90 70 Q100 60 115 70 Q120 80 115 90 Q105 100 90 90Z" fill="#7daf5e" opacity="0.85"/>
+  <path d="M130 80 Q125 70 130 60 Q140 50 155 60 Q160 70 155 80 Q145 90 130 80Z" fill="#6a9b4e" opacity="0.85"/>
+  <path d="M105 130 Q100 120 105 110 Q115 100 130 110 Q135 120 130 130 Q120 140 105 130Z" fill="#7daf5e" opacity="0.8"/>
+  <path d="M140 125 Q135 115 140 105 Q150 95 165 105 Q170 115 165 125 Q155 135 140 125Z" fill="#6a9b4e" opacity="0.8"/>
+  <path d="M115 90 Q120 110 115 130" stroke="#5d4037" stroke-width="2" fill="none"/>
+  <path d="M140 80 Q145 100 140 125" stroke="#5d4037" stroke-width="2" fill="none"/>
+  <text x="125" y="215" text-anchor="middle" fill="#555" font-size="16" font-family="sans-serif" font-weight="600">Soybean</text>
+</svg>

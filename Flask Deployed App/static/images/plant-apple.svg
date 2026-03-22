@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250">
+  <rect fill="#fff5f5" width="250" height="250" rx="16"/>
+  <path d="M125 60 Q95 55 85 80 Q70 110 80 145 Q90 180 125 185 Q160 180 170 145 Q180 110 165 80 Q155 55 125 60Z" fill="#e74c3c" opacity="0.85"/>
+  <path d="M125 60 Q130 40 140 35" stroke="#5d4037" stroke-width="3" fill="none"/>
+  <path d="M135 42 Q145 50 138 58" fill="#4ECC5A" opacity="0.8"/>
+  <text x="125" y="215" text-anchor="middle" fill="#555" font-size="16" font-family="sans-serif" font-weight="600">Apple</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <rect fill="#faf6f0" width="300" height="300" rx="16"/>
+  <!-- Corn leaf - long, narrow -->
+  <path d="M80 30 Q70 35 65 50 Q50 150 60 250 Q62 260 75 260 Q160 255 170 250 Q185 240 195 150 Q200 50 190 35 Q185 28 175 30Z" fill="#7cb342" opacity="0.85" transform="rotate(10,130,150)"/>
+  <line x1="125" y1="40" x2="120" y2="255" stroke="#558b2f" stroke-width="2" opacity="0.6"/>
+  <!-- Gray leaf spot lesions - rectangular, gray-tan -->
+  <rect x="95" y="70" width="35" height="12" rx="3" fill="#9e9e9e" opacity="0.65" transform="rotate(8,112,76)"/>
+  <rect x="100" y="110" width="40" height="14" rx="3" fill="#8d8d8d" opacity="0.6" transform="rotate(8,120,117)"/>
+  <rect x="90" y="155" width="45" height="15" rx="3" fill="#9e9e9e" opacity="0.65" transform="rotate(8,112,162)"/>
+  <rect x="95" y="200" width="38" height="13" rx="3" fill="#8d8d8d" opacity="0.6" transform="rotate(8,114,206)"/>
+  <!-- Darker borders on lesions -->
+  <rect x="95" y="70" width="35" height="12" rx="3" fill="none" stroke="#616161" stroke-width="1" opacity="0.5" transform="rotate(8,112,76)"/>
+  <rect x="100" y="110" width="40" height="14" rx="3" fill="none" stroke="#616161" stroke-width="1" opacity="0.5" transform="rotate(8,120,117)"/>
+  <rect x="90" y="155" width="45" height="15" rx="3" fill="none" stroke="#616161" stroke-width="1" opacity="0.5" transform="rotate(8,112,162)"/>
+  <text x="150" y="285" text-anchor="middle" fill="#555" font-size="12" font-family="sans-serif" font-weight="600">Corn Gray Leaf Spot</text>
+</svg>

@@ -191,6 +191,10 @@ Supplement Market
         margin-bottom: 20px;
     }
 
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .supplement-card { width: calc(50% - 20px); }
+    }
+
     @media (max-width: 768px) {
         .market-title {
             font-size: 1.8rem;
@@ -226,13 +230,13 @@ Supplement Market
 
     <!-- Filter Tabs -->
     <div class="filter-tabs fade-in">
-        <button class="filter-btn active" onclick="filterProducts('all')">
+        <button class="filter-btn active" onclick="filterProducts('all', this)">
             <i class="fas fa-th-large me-2"></i><span data-translatable>All Products</span>
         </button>
-        <button class="filter-btn" onclick="filterProducts('fertilizer')">
+        <button class="filter-btn" onclick="filterProducts('fertilizer', this)">
             <i class="fas fa-seedling me-2"></i><span data-translatable>Fertilizers</span>
         </button>
-        <button class="filter-btn" onclick="filterProducts('supplement')">
+        <button class="filter-btn" onclick="filterProducts('supplement', this)">
             <i class="fas fa-prescription-bottle me-2"></i><span data-translatable>Supplements</span>
         </button>
     </div>
@@ -254,8 +258,8 @@ Supplement Market
             {% endif %}
 
             <div class="product-image-container">
-                <img src="{{supplement_image[index]}}" alt="{{supplement_name[index]}}" class="product-image"
-                     onerror="this.onerror=null;this.style.padding='30px';this.style.objectFit='contain';this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22180%22 viewBox=%220 0 180 180%22%3E%3Crect fill=%22%23e8f5e9%22 width=%22180%22 height=%22180%22 rx=%2216%22/%3E%3Ctext x=%2290%22 y=%2280%22 text-anchor=%22middle%22 fill=%22%232d8f4e%22 font-size=%2248%22%3E%F0%9F%8C%BF%3C/text%3E%3Ctext x=%2290%22 y=%22115%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2213%22 font-family=%22sans-serif%22%3EImage unavailable%3C/text%3E%3C/svg%3E';">
+                <img src="{{supplement_image[index]}}" alt="Product image: {{supplement_name[index]}}" class="product-image"
+                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/placeholder-fertilizer.svg') if index in healthy_indices else url_for('static', filename='images/placeholder-fungicide.svg') }}';">
             </div>
 
             <div class="product-info">
@@ -266,10 +270,10 @@ Supplement Market
                     For Disease Treatment
                     {% endif %}
                 </p>
-                <h5 class="product-name">{{supplement_name[index]}}</h5>
+                <h5 class="product-name" data-translatable>{{supplement_name[index]}}</h5>
                 <span class="product-disease">
-                    <i class="fas fa-leaf"></i>{{disease[index]}}
-                                    </span>
+                    <i class="fas fa-leaf"></i><span data-translatable>{{disease[index]}}</span>
+                </span>
             </div>
         </div>
         {% endif %}
@@ -277,18 +281,33 @@ Supplement Market
     </div>
 
     <!-- Stats Section -->
-    
+    <div class="stats-section">
+      <div style="display:flex;justify-content:center;gap:40px;padding:20px;flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="font-size:2em;font-weight:700;color:#4ECC5A;">{{supplement_name|length}}</div>
+          <div style="color:#8892b0;font-size:0.9em;" data-translatable>Products Available</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2em;font-weight:700;color:#4ECC5A;">14</div>
+          <div style="color:#8892b0;font-size:0.9em;" data-translatable>Plant Species Covered</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2em;font-weight:700;color:#4ECC5A;">39</div>
+          <div style="color:#8892b0;font-size:0.9em;" data-translatable>Disease Classes</div>
+        </div>
+      </div>
+    </div>
     </div>
 </div>
 
 <script>
-    function filterProducts(category) {
+    function filterProducts(category, clickedBtn) {
         const cards = document.querySelectorAll('.product-card');
         const buttons = document.querySelectorAll('.filter-btn');
 
         // Update active button
         buttons.forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.filter-btn').classList.add('active');
+        if (clickedBtn) clickedBtn.closest('.filter-btn').classList.add('active');
 
         // Filter cards
         cards.forEach(card => {
