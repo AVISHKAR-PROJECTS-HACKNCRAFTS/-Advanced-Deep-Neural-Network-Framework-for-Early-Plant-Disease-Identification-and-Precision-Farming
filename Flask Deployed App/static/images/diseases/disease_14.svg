@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fdf6ee;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#f5ebe0;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6abf69;stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#4ECC5A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#3a9d42;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a9d42;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2d7a35;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+    <radialGradient id="spotGrad1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#5C3317;stop-opacity:0.85"/>
+      <stop offset="60%" style="stop-color:#8B5E3C;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#A0784C;stop-opacity:0.2"/>
+    </radialGradient>
+    <radialGradient id="spotGrad2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#6B3A1F;stop-opacity:0.8"/>
+      <stop offset="50%" style="stop-color:#8B6B45;stop-opacity:0.5"/>
+      <stop offset="100%" style="stop-color:#A89060;stop-opacity:0.15"/>
+    </radialGradient>
+    <radialGradient id="spotGrad3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#704020;stop-opacity:0.75"/>
+      <stop offset="100%" style="stop-color:#9B7050;stop-opacity:0.1"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect fill="url(#bgGrad)" width="300" height="300" rx="20"/>
+  <rect fill="none" stroke="#d4c5b0" stroke-width="1.5" width="296" height="296" x="2" y="2" rx="18" opacity="0.5"/>
+
+  <!-- Leaf body -->
+  <g filter="url(#shadow)">
+    <!-- Main leaf shape -->
+    <path d="
+      M150 40
+      C120 50, 90 70, 80 100
+      C70 130, 75 160, 90 180
+      C100 195, 120 200, 150 195
+      C180 200, 200 195, 210 180
+      C225 160, 230 130, 220 100
+      C210 70, 180 50, 150 40
+      Z"
+      fill="url(#leafGrad)" stroke="#3a8a40" stroke-width="1"/>
+
+    <!-- Leaf veins - center -->
+    <path d="M150 50 L150 190" stroke="#2d8040" stroke-width="2.5" fill="none" opacity="0.5"/>
+    <!-- Leaf veins - left side -->
+    <path d="M150 80 Q125 85, 95 100" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+    <path d="M150 110 Q120 118, 85 135" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+    <path d="M150 140 Q125 148, 95 165" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+    <!-- Leaf veins - right side -->
+    <path d="M150 80 Q175 85, 205 100" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+    <path d="M150 110 Q180 118, 215 135" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+    <path d="M150 140 Q175 148, 205 165" stroke="#2d8040" stroke-width="1.5" fill="none" opacity="0.35"/>
+  </g>
+
+  <!-- Stem -->
+  <path d="M150 190 C148 200, 145 210, 140 220" stroke="url(#stemGrad)" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Disease spots with realistic gradients -->
+  <ellipse cx="120" cy="95" rx="14" ry="11" fill="url(#spotGrad1)" transform="rotate(-15, 120, 95)"/>
+  <ellipse cx="175" cy="105" rx="12" ry="10" fill="url(#spotGrad2)" transform="rotate(10, 175, 105)"/>
+  <ellipse cx="135" cy="140" rx="10" ry="8" fill="url(#spotGrad3)" transform="rotate(-5, 135, 140)"/>
+  <ellipse cx="170" cy="155" rx="8" ry="7" fill="url(#spotGrad1)" transform="rotate(20, 170, 155)"/>
+  <ellipse cx="145" cy="170" rx="6" ry="5" fill="url(#spotGrad2)" transform="rotate(-10, 145, 170)"/>
+  <!-- Small scattered spots -->
+  <circle cx="105" cy="120" r="4" fill="url(#spotGrad3)"/>
+  <circle cx="190" cy="130" r="3.5" fill="url(#spotGrad1)"/>
+  <circle cx="160" cy="75" r="3" fill="url(#spotGrad2)"/>
+
+  <!-- Yellowing around disease spots -->
+  <ellipse cx="120" cy="95" rx="20" ry="17" fill="#c5a832" opacity="0.15" transform="rotate(-15, 120, 95)"/>
+  <ellipse cx="175" cy="105" rx="18" ry="15" fill="#c5a832" opacity="0.12" transform="rotate(10, 175, 105)"/>
+  <ellipse cx="135" cy="140" rx="16" ry="13" fill="#c5a832" opacity="0.1" transform="rotate(-5, 135, 140)"/>
+
+  <!-- Warning icon -->
+  <g transform="translate(240, 30)">
+    <circle cx="0" cy="0" r="18" fill="#e8a838" opacity="0.9"/>
+    <text x="0" y="6" text-anchor="middle" fill="#fff" font-size="22" font-family="Arial, sans-serif" font-weight="700">!</text>
+  </g>
+
+  <!-- Label text -->
+  <rect x="30" y="240" width="240" height="50" rx="10" fill="#fff" opacity="0.85"/>
+  <rect x="30" y="240" width="240" height="50" rx="10" fill="none" stroke="#c4a882" stroke-width="1" opacity="0.5"/>
+  <text x="150" y="260" text-anchor="middle" fill="#5C3317" font-size="15" font-family="'Segoe UI', Arial, sans-serif" font-weight="700">Disease Reference Image</text>
+  <text x="150" y="280" text-anchor="middle" fill="#8B7355" font-size="11" font-family="'Segoe UI', Arial, sans-serif">Placeholder - Actual image unavailable</text>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <rect fill="#faf6f0" width="300" height="300" rx="16"/>
+  <!-- Apple leaf -->
+  <path d="M150 40 Q100 60 80 110 Q60 170 90 220 Q120 260 150 250 Q180 260 210 220 Q240 170 220 110 Q200 60 150 40Z" fill="#7cb342" opacity="0.85"/>
+  <line x1="150" y1="50" x2="150" y2="240" stroke="#558b2f" stroke-width="2" opacity="0.6"/>
+  <line x1="150" y1="110" x2="105" y2="140" stroke="#558b2f" stroke-width="1.5" opacity="0.4"/>
+  <line x1="150" y1="110" x2="195" y2="140" stroke="#558b2f" stroke-width="1.5" opacity="0.4"/>
+  <!-- Cedar rust spots - bright orange/yellow circular lesions -->
+  <circle cx="125" cy="110" r="15" fill="#ff8f00" opacity="0.7"/>
+  <circle cx="125" cy="110" r="10" fill="#ff6f00" opacity="0.5"/>
+  <circle cx="170" cy="140" r="12" fill="#ff8f00" opacity="0.65"/>
+  <circle cx="170" cy="140" r="7" fill="#ff6f00" opacity="0.5"/>
+  <circle cx="140" cy="185" r="14" fill="#ff8f00" opacity="0.7"/>
+  <circle cx="140" cy="185" r="9" fill="#ff6f00" opacity="0.5"/>
+  <circle cx="115" cy="155" r="8" fill="#ff8f00" opacity="0.6"/>
+  <circle cx="180" cy="200" r="10" fill="#ff8f00" opacity="0.65"/>
+  <!-- Rust tendrils on larger spots -->
+  <circle cx="125" cy="110" r="17" fill="none" stroke="#e65100" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
+  <circle cx="140" cy="185" r="16" fill="none" stroke="#e65100" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
+  <text x="150" y="280" text-anchor="middle" fill="#555" font-size="14" font-family="sans-serif" font-weight="600">Apple Cedar Rust</text>
+</svg>
